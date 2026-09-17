@@ -1,9 +1,7 @@
-// Package httpapi is vvaves's HTTP contract over the search, fetch and tts
-// libraries.
+// Package httpapi is vvaves's HTTP contract over the tts library.
 //
 // Handlers take interfaces rather than concrete backends, so the contract —
-// status codes, validation, bounds — is tested without a SearXNG instance, a
-// render service or a voice behind it.
+// status codes, validation, bounds — is tested without a voice behind it.
 package httpapi
 
 import (
@@ -12,13 +10,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/lalternative/packages/go/audioreader"
-	"github.com/lalternative/packages/go/search"
-	"github.com/lalternative/packages/go/search/fetch"
 
-	"github.com/lalternativefabrique/vvaves/core/internal/crawl"
 	"github.com/lalternativefabrique/vvaves/signed"
 )
 
@@ -30,21 +24,8 @@ import (
 // no bucket: readings still stream and are still served, they are just never
 // kept, and nothing can be read ahead of time.
 type Deps struct {
-	Providers map[search.Category]search.Provider
-	Renderer  fetch.Renderer
-	Cache     fetch.Cache
-	Reader    *audioreader.Reader
-	Primer    *audioreader.Primer
-
-	SearchDeadline   time.Duration
-	RenderMaxTimeout time.Duration
-
-	// CrawlStore and CrawlQueue back /crawl. Nil leaves it unconfigured;
-	// /map needs neither, it answers within the request.
-	CrawlStore crawl.Store
-	CrawlQueue crawl.Queue
-	// CrawlMaxRunes bounds each rendering of a crawled page.
-	CrawlMaxRunes int
+	Reader *audioreader.Reader
+	Primer *audioreader.Primer
 
 	// Verifier authenticates a /speak request that came straight from a
 	// browser. Nil accepts none, which is what a deployment reachable only
@@ -60,27 +41,12 @@ type Deps struct {
 	// deployment reachable only from inside the cluster, or a laptop. It has
 	// to be said; a vvaves that forgot its keys must refuse, not serve.
 	Unguarded bool
-	// AllowPrivateFetch lets /fetch and /render reach an address this
-	// deployment holds privately. Nil — the ordinary case — refuses them, so
-	// a caller cannot spend these routes reading the internal network.
-	//
-	// It exists because a test serves its fixture from 127.0.0.1, and because
-	// a deployment whose whole reachable network is its own may legitimately
-	// want it. Both have to say so: the refusal is the default, not the
-	// setting.
-	AllowPrivateFetch bool
 }
 
 func New(d Deps) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("GET /healthz", handleHealth())
 	mux.Handle("GET /openapi.json", contract.Handler())
-	mux.Handle("POST /search", handleSearch(d))
-	mux.Handle("POST /fetch", handleFetch(d))
-	mux.Handle("POST /render", handleRender(d))
-	mux.Handle("POST /map", handleMap(d))
-	mux.Handle("POST /crawl", handleCrawl(d))
-	mux.Handle("GET /crawl/{id}", handleCrawlStatus(d))
 	mux.Handle("OPTIONS /speak", handleSpeakPreflight())
 	mux.Handle("POST /speak", withCORS(handleSpeak(d)))
 	mux.Handle("POST /speak/prime", handlePrime(d))

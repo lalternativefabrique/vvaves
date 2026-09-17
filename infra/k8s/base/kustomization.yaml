@@ -6,7 +6,6 @@ namespace: vvaves-prod
 resources:
   - namespace.yaml
   - s3-external-secret.yaml
-  - fetch-proxy-external-secret.yaml
   - vvaves.yaml
 
 # An immutable date-sha tag produced by `sklp run publish`. Never `latest`.

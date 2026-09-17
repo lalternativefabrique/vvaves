@@ -3,63 +3,12 @@ kind: devstack
 name: dev
 
 # The whole platform on one machine: the deployments of .sklp/deploy-root.yaml
-# (app, tts, searxng+redis) in a single space, reached by service name exactly
+# (app, tts) in a single space, reached by service name exactly
 # as in production.
 env_files:
   - .env
 
 services:
-  redis:
-    image: redis:7-alpine
-    network: bridge
-    port: 6379
-    command: ["redis-server", "--save", "60", "1"]
-    volumes: ["sklp-dev-redis-data:/data"]
-    ready:
-      tcp: "6379"
-      timeout: 60s
-
-  # The stock image only serves HTML; the search client asks for JSON, which
-  # SearXNG refuses (403) unless the format is enabled in settings.yml. The
-  # image has no env override for it, so the file is written into the config
-  # volume before searxng starts.
-  searxng-config:
-    image: alpine:3.21
-    network: bridge
-    oneshot: true
-    volumes: ["sklp-dev-searxng-config:/etc/searxng"]
-    command:
-      - sh
-      - -c
-      - |
-        cat > /etc/searxng/settings.yml <<'YAML'
-        use_default_settings: true
-        server:
-          limiter: false
-        search:
-          default_lang: "fr"
-          formats:
-            - html
-            - json
-        YAML
-
-  # 8888, not the image's 8080: a service's host ingress is bound on its own
-  # container port, and the app already owns 8080.
-  searxng:
-    image: docker.io/searxng/searxng@sha256:e45d5894bfaa0bf8773b9f283795ae57f1c15ddb29c8cecb70b3665b0ce9ec60
-    network: bridge
-    port: 8888
-    depends_on: [redis, searxng-config]
-    volumes: ["sklp-dev-searxng-config:/etc/searxng"]
-    env:
-      SEARXNG_PORT: "8888"
-      SEARXNG_BASE_URL: http://searxng:8888
-      SEARXNG_REDIS_URL: redis://redis:6379/0
-      SEARXNG_SECRET: dev-only-searxng-secret
-    ready:
-      http: /healthz
-      timeout: 120s
-
   # Built from source like the app: the image only exists once publish has
   # run on main. The model weights are fetched from Hugging Face on first
   # start into the host's own cache.
@@ -116,14 +65,12 @@ services:
     run: go run .
     workdir: apps/core
     port: 8080
-    depends_on: [searxng, postgres, migrate, tts, nats]
+    depends_on: [postgres, migrate, tts, nats]
     env:
-      SEARXNG_URL: http://searxng:8888
       NATS_URL: nats://nats:4222
       PIPER_URL: http://tts:5000
       TTS_MODEL: french_24l
       TTS_VOICE: estelle
-      CHROMIUM_PATH: /usr/bin/chromium
       SPEAK_UNGUARDED: "true"
       DATABASE_URL: postgres://vvaves:vvaves@postgres:5432/vvaves?sslmode=disable
       JWT_SECRET: dev-only-jwt-secret

@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ai
-  labels:
-    name: ai
-    app.kubernetes.io/part-of: vvaves
-    environment: production

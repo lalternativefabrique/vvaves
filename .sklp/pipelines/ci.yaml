@@ -22,8 +22,6 @@ scopes:
     - "Dockerfile"
   migrate:
     - "apps/migrations/**"
-  render:
-    - "render/**"
   web:
     - "apps/web/**"
     - "lib/front/**"
@@ -68,13 +66,6 @@ steps:
         test -f "${up%.up.sql}.down.sql" || { echo "missing down for $up"; exit 1; }
       done
 
-  - name: render-test
-    scope: [render]
-    tools: [node]
-    workdir: render
-    run: |
-      npm install
-      npm test
 
   - name: web-check
     scope: [web]

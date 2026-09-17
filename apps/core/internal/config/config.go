@@ -13,32 +13,16 @@ import (
 type Config struct {
 	Addr string
 
-	SearxngURL  string
-	BraveAPIKey string
 
-	// FetchProxy is the residential endpoint page fetches go through, as
-	// "scheme://user:pass@host:port". Publishers behind bot management refuse
-	// a datacenter address whatever headers it carries, so without one /fetch
-	// is refused by a growing share of the web it exists to read. Empty
-	// fetches direct, which is what a local run wants.
-	FetchProxy string
 
-	SearchDeadline time.Duration
-	FetchCacheTTL  time.Duration
 	// NatsURL, read from NATS_URL, points the page cache at a JetStream KV
 	// bucket every replica shares. Empty keeps the cache in this process.
-	NatsURL string
 	// FetchCacheMaxBytes bounds the shared bucket, read from
 	// FETCH_CACHE_MAX_BYTES; JetStream evicts the oldest pages past it.
-	FetchCacheMaxBytes int64
 	// CrawlMaxRunes bounds each rendering of a crawled page, read from
 	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
 	// read from CRAWL_MAX_BYTES.
-	CrawlMaxRunes int
-	CrawlMaxBytes int64
 
-	ChromiumPath     string
-	RenderMaxTimeout time.Duration
 
 	TTSURL         string
 	TTSAPIKey      string
@@ -77,13 +61,6 @@ type Config struct {
 	// from SPEAK_UNGUARDED=true. For a vvaves nothing outside the cluster
 	// reaches, and for a laptop; never for one behind a public name.
 	SpeakUnguarded bool
-	// FetchAllowPrivate lets /fetch and /render reach an address this
-	// deployment holds privately, read from FETCH_ALLOW_PRIVATE=true. Unset
-	// refuses them: these routes take a URL from their caller and report what
-	// came back, so without the check they read the internal network one
-	// request at a time. A laptop, or a deployment whose whole reachable
-	// network is its own, says so.
-	FetchAllowPrivate bool
 	// RegistryEncryptionKey seals the applications' keys at rest, a base64
 	// 32-byte key. Required with a database: a registry that stores secrets
 	// in the clear is one that must not start.
@@ -94,19 +71,8 @@ func Load() Config {
 	return Config{
 		Addr: env("LISTEN_ADDR", ":8080"),
 
-		SearxngURL:  os.Getenv("SEARXNG_URL"),
-		BraveAPIKey: os.Getenv("BRAVE_API_KEY"),
-		FetchProxy:  os.Getenv("FETCH_PROXY"),
 
-		SearchDeadline:     envDuration("SEARCH_DEADLINE_MS", 4*time.Second),
-		FetchCacheTTL:      envDuration("FETCH_CACHE_TTL_MS", 15*time.Minute),
-		NatsURL:            os.Getenv("NATS_URL"),
-		FetchCacheMaxBytes: envInt64("FETCH_CACHE_MAX_BYTES", 256<<20),
-		CrawlMaxRunes:      envInt("CRAWL_MAX_RUNES", 20000),
-		CrawlMaxBytes:      envInt64("CRAWL_MAX_BYTES", 512<<20),
 
-		ChromiumPath:     os.Getenv("CHROMIUM_PATH"),
-		RenderMaxTimeout: envDuration("RENDER_MAX_TIMEOUT_MS", 20*time.Second),
 
 		TTSURL:    os.Getenv("PIPER_URL"),
 		TTSAPIKey: os.Getenv("TTS_API_KEY"),
@@ -139,7 +105,6 @@ func Load() Config {
 		JWTSecret:             os.Getenv("JWT_SECRET"),
 		RegistryEncryptionKey: os.Getenv("REGISTRY_ENCRYPTION_KEY"),
 		SpeakUnguarded:        os.Getenv("SPEAK_UNGUARDED") == "true",
-		FetchAllowPrivate:     os.Getenv("FETCH_ALLOW_PRIVATE") == "true",
 		OIDCIssuerURL:         os.Getenv("OIDC_ISSUER_URL"),
 		OIDCAudience:          envString("OIDC_AUDIENCE", "vvaves"),
 	}
