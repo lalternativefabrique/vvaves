@@ -21,7 +21,7 @@ import (
 // @Produce  json
 // @Success  200  {object}  AppListDTO
 // @Security BearerAuth
-// @Router   /admin/apps [get]
+// @Router   /api/v1/admin/apps [get]
 // @ID       listApps
 func (s *Service) List(w http.ResponseWriter, r *http.Request) {
 	res, err := cqrs.Ask[list_apps.Query, list_apps.Result](r.Context(), s.queries, list_apps.Query{})
@@ -48,7 +48,7 @@ func (s *Service) List(w http.ResponseWriter, r *http.Request) {
 // @Success  201   {object}  CredentialsDTO
 // @Failure  400   {object}  ErrorDTO
 // @Security BearerAuth
-// @Router   /admin/apps [post]
+// @Router   /api/v1/admin/apps [post]
 // @ID       registerApp
 func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
@@ -74,7 +74,7 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure  400   {object}  ErrorDTO
 // @Failure  404   {object}  ErrorDTO
 // @Security BearerAuth
-// @Router   /admin/apps/{name}/rotate [post]
+// @Router   /api/v1/admin/apps/{name}/rotate [post]
 // @ID       rotateAppKey
 func (s *Service) Rotate(w http.ResponseWriter, r *http.Request) {
 	res, err := cqrs.Execute[rotate_keys.Command, rotate_keys.Result](r.Context(), s.commands, rotate_keys.Command{Name: r.PathValue("name")})
@@ -93,7 +93,7 @@ func (s *Service) Rotate(w http.ResponseWriter, r *http.Request) {
 // @Success  204
 // @Failure  404   {object}  ErrorDTO
 // @Security BearerAuth
-// @Router   /admin/apps/{name} [delete]
+// @Router   /api/v1/admin/apps/{name} [delete]
 // @ID       revokeApp
 func (s *Service) Revoke(w http.ResponseWriter, r *http.Request) {
 	if _, err := cqrs.Execute[revoke_app.Command, revoke_app.Result](r.Context(), s.commands, revoke_app.Command{Name: r.PathValue("name")}); err != nil {

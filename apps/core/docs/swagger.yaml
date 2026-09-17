@@ -1,5 +1,301 @@
-basePath: /api/v1
+basePath: /
 definitions:
+  crawl.Job:
+    properties:
+      created_at:
+        type: string
+      error:
+        type: string
+      failed:
+        type: integer
+      id:
+        type: string
+      pages:
+        type: integer
+      scope:
+        $ref: '#/definitions/crawl.Scope'
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  crawl.Scope:
+    properties:
+      exclude_paths:
+        items:
+          type: string
+        type: array
+      include_paths:
+        items:
+          type: string
+        type: array
+      max_depth:
+        type: integer
+      max_pages:
+        type: integer
+      seed:
+        type: string
+      url:
+        type: string
+    type: object
+  crawl.StoredPage:
+    properties:
+      depth:
+        type: integer
+      error:
+        type: string
+      markdown:
+        type: string
+      text:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  httpapi.crawlRequest:
+    properties:
+      exclude_paths:
+        items:
+          type: string
+        type: array
+      include_paths:
+        items:
+          type: string
+        type: array
+      max_depth:
+        type: integer
+      max_pages:
+        type: integer
+      seed:
+        description: Seed "sitemap" starts the crawl from every URL the site declares.
+        type: string
+      url:
+        type: string
+    type: object
+  httpapi.crawlStatusResponse:
+    properties:
+      created_at:
+        type: string
+      error:
+        type: string
+      failed:
+        type: integer
+      id:
+        type: string
+      next:
+        type: integer
+      pages:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/crawl.StoredPage'
+        type: array
+      scope:
+        $ref: '#/definitions/crawl.Scope'
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  httpapi.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  httpapi.existsResponse:
+    properties:
+      ready:
+        type: boolean
+    type: object
+  httpapi.fetchRequest:
+    properties:
+      format:
+        description: |-
+          Format picks which rendering of the page comes back: "text" flattens
+          it, "markdown" keeps headings, tables and links. Empty returns both.
+        type: string
+      max_runes:
+        type: integer
+      paginate:
+        type: integer
+      render:
+        type: boolean
+      url:
+        type: string
+    type: object
+  httpapi.fetchResponse:
+    properties:
+      markdown:
+        type: string
+      pages:
+        items:
+          type: string
+        type: array
+      text:
+        type: string
+      title:
+        type: string
+    type: object
+  httpapi.healthResponse:
+    properties:
+      ok:
+        type: boolean
+    type: object
+  httpapi.mapRequest:
+    properties:
+      deadline_ms:
+        type: integer
+      exclude_paths:
+        items:
+          type: string
+        type: array
+      include_paths:
+        items:
+          type: string
+        type: array
+      limit:
+        type: integer
+      max_depth:
+        type: integer
+      max_pages:
+        type: integer
+      seed:
+        description: Seed "sitemap" starts the crawl from every URL the site declares.
+        type: string
+      sitemap:
+        description: |-
+          Sitemap reads the site's sitemaps before walking its links. On by
+          default: it is the cheapest and most complete source there is.
+        type: boolean
+      url:
+        type: string
+    type: object
+  httpapi.mapResponse:
+    properties:
+      links:
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    type: object
+  httpapi.openGraph:
+    properties:
+      description:
+        type: string
+      image:
+        type: string
+      site_name:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  httpapi.renderRequest:
+    properties:
+      timeout_ms:
+        type: integer
+      url:
+        type: string
+    type: object
+  httpapi.renderResponse:
+    properties:
+      final_url:
+        type: string
+      html:
+        type: string
+    type: object
+  httpapi.result:
+    properties:
+      author:
+        type: string
+      content_error:
+        type: string
+      description:
+        type: string
+      duration:
+        type: string
+      favicon:
+        type: string
+      markdown:
+        type: string
+      open_graph:
+        $ref: '#/definitions/httpapi.openGraph'
+      published_at:
+        type: string
+      score:
+        type: number
+      source:
+        type: string
+      source_type:
+        type: string
+      text:
+        type: string
+      thumbnail:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  httpapi.searchRequest:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      content:
+        description: |-
+          Content reads the first N results' pages into the response, so one
+          call gives an agent what it would otherwise fetch one by one.
+        type: integer
+      content_runes:
+        type: integer
+      deadline_ms:
+        type: integer
+      format:
+        type: string
+      language:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+      q:
+        type: string
+      time_range:
+        type: string
+    type: object
+  httpapi.searchResponse:
+    properties:
+      partial:
+        type: boolean
+      query:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/httpapi.result'
+        type: array
+    type: object
+  httpapi.speakRequest:
+    properties:
+      id:
+        type: string
+      scope:
+        description: |-
+          Scope and ID name where a reading is kept. Both optional: an ID lets a
+          caller prime a reading before anyone asks for it, since priming means
+          naming ahead of time what will be listened to. Without one the reading
+          is still cached, keyed by the text alone — a second listen of the same
+          words finds it, which no caller has to opt into.
+        type: string
+      stream:
+        type: boolean
+      text:
+        type: string
+    type: object
   registry.AppDTO:
     properties:
       active:
@@ -45,12 +341,15 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Search, fetch, render and speak for every product, plus the admin API
-    of the applications registry.
+  description: |-
+    Search, fetch, render and speak for every product, plus the admin API of the applications registry.
+
+    The web and speak routes answer at the root; the admin API is
+    under /api/v1, which is why no global base path is declared.
   title: Vvaves
   version: 0.3.0
 paths:
-  /admin/apps:
+  /api/v1/admin/apps:
     get:
       operationId: listApps
       produces:
@@ -92,7 +391,7 @@ paths:
       summary: Admit an application and hand its key out once
       tags:
       - admin
-  /admin/apps/{name}:
+  /api/v1/admin/apps/{name}:
     delete:
       operationId: revokeApp
       parameters:
@@ -113,7 +412,7 @@ paths:
       summary: End an application's access at once
       tags:
       - admin
-  /admin/apps/{name}/rotate:
+  /api/v1/admin/apps/{name}/rotate:
     post:
       operationId: rotateAppKey
       parameters:
@@ -142,9 +441,386 @@ paths:
       summary: Mint an application a new key; the old one works for a day
       tags:
       - admin
+  /crawl:
+    post:
+      consumes:
+      - application/json
+      operationId: startCrawl
+      parameters:
+      - description: site and scope
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.crawlRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/crawl.Job'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Start a crawl over a scope; results are read back by id
+      tags:
+      - web
+  /crawl/{id}:
+    get:
+      operationId: crawlStatus
+      parameters:
+      - description: crawl id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: first page to return
+        in: query
+        name: offset
+        type: integer
+      - description: how many pages to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.crawlStatusResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: A crawl's progress and the pages it has read so far
+      tags:
+      - web
+  /fetch:
+    post:
+      consumes:
+      - application/json
+      operationId: fetchPage
+      parameters:
+      - description: page to read
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.fetchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.fetchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: The page's main text, rendering it when a static read comes back empty
+      tags:
+      - web
+  /healthz:
+    get:
+      operationId: healthz
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.healthResponse'
+      summary: Liveness
+      tags:
+      - ops
+  /map:
+    post:
+      consumes:
+      - application/json
+      operationId: mapSite
+      parameters:
+      - description: site and scope
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.mapRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.mapResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Every URL a site declares or links to, within a scope
+      tags:
+      - web
+  /render:
+    post:
+      consumes:
+      - application/json
+      operationId: renderPage
+      parameters:
+      - description: page to render
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.renderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.renderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: The page's HTML after its JavaScript has run
+      tags:
+      - web
+  /search:
+    post:
+      consumes:
+      - application/json
+      operationId: search
+      parameters:
+      - description: query
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.searchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.searchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Ranked web results, optionally with the pages' text
+      tags:
+      - web
+  /speak:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Answers audio bytes, not JSON. With stream=false the whole
+        reading comes back with a Content-Length and ranges; with
+        stream=true each piece is emitted as it is read, length-prefixed
+        under application/x-lalter-audio-frames.
+      operationId: speak
+      parameters:
+      - description: text to read
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.speakRequest'
+      produces:
+      - audio/mpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Read a text aloud, from the store when it is already there
+      tags:
+      - speak
+  /speak/exists:
+    post:
+      consumes:
+      - application/json
+      operationId: speakExists
+      parameters:
+      - description: reading to look for
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.speakRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.existsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Whether a reading is already stored, without reading its bytes
+      tags:
+      - speak
+  /speak/pregenerate:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        For a text expected to be heard more than once. It holds a
+        synthesis slot, so prefer /speak/prime for a text that may never
+        be played. Takes an application key.
+      operationId: pregenerateSpeak
+      parameters:
+      - description: text to read in full
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.speakRequest'
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Read a whole text ahead of time and keep it
+      tags:
+      - speak
+  /speak/prime:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Answers 202 without waiting: nobody is listening yet. Takes an
+        application key — a browser signature is good for /speak alone.
+      operationId: primeSpeak
+      parameters:
+      - description: text whose opening to read
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.speakRequest'
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - ServiceKey: []
+      - BearerAuth: []
+      summary: Read a text's opening ahead of time, so the first listen starts at
+        once
+      tags:
+      - speak
 securityDefinitions:
   BearerAuth:
     in: header
     name: Authorization
+    type: apiKey
+  ServiceKey:
+    in: header
+    name: X-Vvaves-Key
     type: apiKey
 swagger: "2.0"

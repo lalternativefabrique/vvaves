@@ -7,6 +7,8 @@
 package httpapi
 
 import (
+	"github.com/lalternativefabrique/vvaves/core/docs/contract"
+
 	"encoding/json"
 	"io"
 	"net/http"
@@ -71,9 +73,8 @@ type Deps struct {
 
 func New(d Deps) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-	})
+	mux.Handle("GET /healthz", handleHealth())
+	mux.Handle("GET /openapi.json", contract.Handler())
 	mux.Handle("POST /search", handleSearch(d))
 	mux.Handle("POST /fetch", handleFetch(d))
 	mux.Handle("POST /render", handleRender(d))
@@ -103,6 +104,29 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 
+// handleHealth godoc
+// @Summary  Liveness
+// @Tags     ops
+// @Produce  json
+// @Success  200  {object}  healthResponse
+// @Router   /healthz [get]
+// @ID       healthz
+func handleHealth() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, healthResponse{OK: true})
+	}
+}
+
+// healthResponse is the liveness answer.
+type healthResponse struct {
+	OK bool `json:"ok"`
+}
+
+// errorResponse is what every handler here answers a failure with.
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+	writeJSON(w, status, errorResponse{Error: msg})
 }

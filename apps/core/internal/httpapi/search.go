@@ -97,6 +97,20 @@ func toResults(in []search.Result) []result {
 	return out
 }
 
+// handleSearch godoc
+// @Summary  Ranked web results, optionally with the pages' text
+// @Tags     web
+// @Accept   json
+// @Produce  json
+// @Param    body  body      searchRequest  true  "query"
+// @Success  200   {object}  searchResponse
+// @Failure  400   {object}  errorResponse
+// @Failure  502   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /search [post]
+// @ID       search
 func handleSearch(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if len(d.Providers) == 0 {

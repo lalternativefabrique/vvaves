@@ -33,6 +33,19 @@ const (
 
 const defaultMaxRunes = 6000
 
+// handleFetch godoc
+// @Summary  The page's main text, rendering it when a static read comes back empty
+// @Tags     web
+// @Accept   json
+// @Produce  json
+// @Param    body  body      fetchRequest  true  "page to read"
+// @Success  200   {object}  fetchResponse
+// @Failure  400   {object}  errorResponse
+// @Failure  502   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /fetch [post]
+// @ID       fetchPage
 func handleFetch(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := d.guardService(r); err != nil {

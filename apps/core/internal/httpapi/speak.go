@@ -66,6 +66,24 @@ func decodeSpeak(w http.ResponseWriter, r *http.Request) (speakRequest, bool) {
 // A cached reading is served whole, with a Content-Length and byte ranges, so
 // a second listen starts at once and can be seeked. Only the listen that pays
 // for the reading streams, and only when it asks to.
+// handleSpeak godoc
+// @Summary  Read a text aloud, from the store when it is already there
+// @Description Answers audio bytes, not JSON. With stream=false the whole
+// @Description reading comes back with a Content-Length and ranges; with
+// @Description stream=true each piece is emitted as it is read, length-prefixed
+// @Description under application/x-lalter-audio-frames.
+// @Tags     speak
+// @Accept   json
+// @Produce  audio/mpeg
+// @Param    body  body      speakRequest  true  "text to read"
+// @Success  200   {file}    binary
+// @Failure  400   {object}  errorResponse
+// @Failure  401   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /speak [post]
+// @ID       speak
 func handleSpeak(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Reader == nil {
@@ -104,6 +122,21 @@ func handleSpeak(d Deps) http.HandlerFunc {
 // that asked has a reply to finish writing. A failure is logged rather than
 // reported, because nothing is broken without it — the first listener waits
 // exactly as they did before.
+// handlePrime godoc
+// @Summary  Read a text's opening ahead of time, so the first listen starts at once
+// @Description Answers 202 without waiting: nobody is listening yet. Takes an
+// @Description application key — a browser signature is good for /speak alone.
+// @Tags     speak
+// @Accept   json
+// @Param    body  body      speakRequest  true  "text whose opening to read"
+// @Success  202
+// @Failure  400   {object}  errorResponse
+// @Failure  401   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /speak/prime [post]
+// @ID       primeSpeak
 func handlePrime(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Primer == nil {
@@ -143,6 +176,22 @@ func handlePrime(d Deps) http.HandlerFunc {
 // For a reading that will be heard more than once — a published page — where
 // paying the whole synthesis up front is amortised. A reading heard at most
 // once wants /speak/prime instead, which pays for the opening alone.
+// handlePregenerate godoc
+// @Summary  Read a whole text ahead of time and keep it
+// @Description For a text expected to be heard more than once. It holds a
+// @Description synthesis slot, so prefer /speak/prime for a text that may never
+// @Description be played. Takes an application key.
+// @Tags     speak
+// @Accept   json
+// @Param    body  body      speakRequest  true  "text to read in full"
+// @Success  202
+// @Failure  400   {object}  errorResponse
+// @Failure  401   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /speak/pregenerate [post]
+// @ID       pregenerateSpeak
 func handlePregenerate(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Reader == nil {
@@ -170,9 +219,27 @@ func handlePregenerate(d Deps) http.HandlerFunc {
 	}
 }
 
+// existsResponse reports whether a reading is already in the store.
+type existsResponse struct {
+	Ready bool `json:"ready"`
+}
+
 // handleExists reports whether a reading is already stored, without reading
 // its bytes — for a caller deciding whether to offer a play button, which
 // would otherwise download the whole file to answer a yes or no.
+// handleExists godoc
+// @Summary  Whether a reading is already stored, without reading its bytes
+// @Tags     speak
+// @Accept   json
+// @Produce  json
+// @Param    body  body      speakRequest  true  "reading to look for"
+// @Success  200   {object}  existsResponse
+// @Failure  400   {object}  errorResponse
+// @Failure  401   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /speak/exists [post]
+// @ID       speakExists
 func handleExists(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Reader == nil {
@@ -188,8 +255,8 @@ func handleExists(d Deps) http.HandlerFunc {
 			writeAuthError(w, err)
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]bool{
-			"ready": d.Reader.Exists(r.Context(), ar),
+		writeJSON(w, http.StatusOK, existsResponse{
+			Ready: d.Reader.Exists(r.Context(), ar),
 		})
 	}
 }

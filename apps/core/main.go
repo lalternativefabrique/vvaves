@@ -5,10 +5,16 @@
 // @title           Vvaves
 // @version         0.3.0
 // @description     Search, fetch, render and speak for every product, plus the admin API of the applications registry.
-// @BasePath        /api/v1
+// @description
+// @description     The web and speak routes answer at the root; the admin API is
+// @description     under /api/v1, which is why no global base path is declared.
+// @BasePath        /
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+// @securityDefinitions.apikey ServiceKey
+// @in header
+// @name X-Vvaves-Key
 package main
 
 import (
