@@ -37,22 +37,6 @@ func TestNoKeysConfiguredIsEmpty(t *testing.T) {
 	}
 }
 
-func TestFetchProxyIsReadFromTheEnvironment(t *testing.T) {
-	t.Setenv("FETCH_PROXY", "http://user:pass@gate.decodo.com:7000")
-	if got := Load().FetchProxy; got != "http://user:pass@gate.decodo.com:7000" {
-		t.Errorf("FetchProxy = %q", got)
-	}
-}
-
-func TestFetchProxyDefaultsToDirect(t *testing.T) {
-	t.Setenv("FETCH_PROXY", "")
-	if got := Load().FetchProxy; got != "" {
-		t.Errorf("FetchProxy = %q, want empty so the fetch goes direct", got)
-	}
-}
-
-// An issuer listed twice holds both secrets: a rotation by hand, the old key
-// valid while the application redeploys with the new one.
 func TestAnIssuerMayHoldSeveralSecrets(t *testing.T) {
 	t.Setenv("SPEAK_KEYS", "lalter:new,lalter:old")
 

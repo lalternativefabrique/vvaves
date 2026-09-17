@@ -24,7 +24,7 @@ func TestOpenAPISpecIsServed(t *testing.T) {
 	if doc.OpenAPI == "" {
 		t.Error("served document declares no openapi version")
 	}
-	for _, want := range []string{"/search", "/fetch", "/render", "/map", "/crawl", "/crawl/{id}", "/speak", "/speak/prime", "/speak/pregenerate", "/speak/exists", "/healthz"} {
+	for _, want := range []string{"/speak", "/speak/prime", "/speak/pregenerate", "/speak/exists", "/healthz"} {
 		if _, ok := doc.Paths[want]; !ok {
 			t.Errorf("contract is missing %s", want)
 		}

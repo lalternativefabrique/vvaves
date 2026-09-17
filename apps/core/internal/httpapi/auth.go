@@ -17,11 +17,6 @@ const HeaderKey = client.HeaderKey
 // read: a token meant for another part of the suite must not reach the voice.
 const ScopeSpeak = "vvaves:speak"
 
-// ScopeSearch is the scope a token must carry to search, fetch or render.
-// It is not ScopeSpeak: reading text aloud costs a synthesis, while these
-// three reach the open web on a URL the caller picks, and a service granted
-// one has no business doing the other.
-const ScopeSearch = "vvaves:search"
 
 // BearerVerifier checks a token a service obtained from the suite's identity
 // provider. svcauth.Verifier is the one main wires.
@@ -70,47 +65,8 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 	return d.Verifier.Verify(r.URL.Query(), scope, id, text)
 }
 
-// guardService refuses a /search, /fetch or /render request from a caller
-// that is neither a service holding a key nor one holding a token.
-//
-// A signature is never enough here, and that is the whole point of a separate
-// guard. A signed URL authorises one reading of one text to a browser that
-// cannot hold a credential; these three routes reach an arbitrary URL of the
-// caller's choosing, and /render runs its JavaScript. Accepting a signature
-// would let a link handed to a listener be spent scanning whatever the
-// deployment can reach.
-func (d Deps) guardService(r *http.Request) error {
-	if d.Unguarded {
-		return nil
-	}
-	if d.AppKeyIssuer == nil && d.Tokens == nil {
-		return ErrNoGuard
-	}
-	if raw, ok := svcauth.BearerToken(r); ok && d.Tokens != nil {
-		claims, err := d.Tokens.Verify(r.Context(), raw)
-		if err != nil {
-			return ErrBadToken
-		}
-		if !claims.HasScope(ScopeSearch) {
-			return ErrTokenLacksSearchScope
-		}
-		return nil
-	}
-	if key := r.Header.Get(HeaderKey); key != "" && d.AppKeyIssuer != nil {
-		if _, ok := d.AppKeyIssuer(key); ok {
-			return nil
-		}
-	}
-	return ErrNotAService
-}
 
-// ErrNotAService is a search, fetch or render request carrying neither a key
-// nor a token.
-var ErrNotAService = errors.New("fetch: a key or a token is required")
 
-// ErrTokenLacksSearchScope is a valid token that was not granted the scope
-// these routes take.
-var ErrTokenLacksSearchScope = errors.New("fetch: token lacks the " + ScopeSearch + " scope")
 
 // speakPath is the only route a signature authorises: the one that serves a
 // listener the audio they asked for.

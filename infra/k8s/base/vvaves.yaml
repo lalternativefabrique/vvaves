@@ -38,10 +38,8 @@ spec:
           image: rg.fr-par.scw.cloud/lalternative/vvaves
           imagePullPolicy: IfNotPresent
           env:
-            # searxng and piper live in synthiz's `ai` namespace, so they are
+            # piper lives in the `ai` namespace, so it is
             # addressed across it rather than by bare service name.
-            - name: SEARXNG_URL
-              value: http://searxng.ai.svc.cluster.local:8080
             - name: PIPER_URL
               value: http://piper.ai.svc.cluster.local:5000
             - name: TTS_MODEL
@@ -94,12 +92,6 @@ spec:
             # turned away by a growing share of the web it exists to read.
             #
             # Optional: unset, vvaves fetches direct and says so at startup.
-            - name: FETCH_PROXY
-              valueFrom:
-                secretKeyRef:
-                  name: vvaves-fetch-proxy
-                  key: FETCH_PROXY
-                  optional: true
           ports:
             - containerPort: 8080
               name: http

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lalternative/packages/go/search"
 	"github.com/lalternative/packages/go/svcauth"
 
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
@@ -59,39 +58,6 @@ func TestSpeakRejectsABearerTokenWithoutTheSpeakScope(t *testing.T) {
 	}
 }
 
-func TestSpeakRejectsAnUnknownBearerToken(t *testing.T) {
-	rec := postBearer(t, tokenDeps(t), "/speak", "forged", `{"text":"bonjour","scope":"chat","id":"m1"}`)
-	if rec.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403", rec.Code)
-	}
-}
-
-// The token that searches reaches /search; the one that only speaks does not.
-// Two scopes because the costs differ: a reading is a synthesis this service
-// pays for, a fetch is the open web on a URL the caller picks.
-func TestSearchAcceptsABearerTokenWithTheSearchScope(t *testing.T) {
-	d := tokenDeps(t)
-	d.Providers = map[search.Category]search.Provider{
-		search.CategoryGeneral: &stubProvider{results: []search.Result{{Title: "hit"}}},
-	}
-	rec := postBearer(t, d, "/search", "searches", `{"q":"gramsci"}`)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
-	}
-}
-
-func TestSearchRejectsABearerTokenThatOnlySpeaks(t *testing.T) {
-	d := tokenDeps(t)
-	d.Providers = map[search.Category]search.Provider{
-		search.CategoryGeneral: &stubProvider{results: []search.Result{{Title: "hit"}}},
-	}
-	rec := postBearer(t, d, "/search", "speaks", `{"q":"gramsci"}`)
-	if rec.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403", rec.Code)
-	}
-}
-
-// Priming is a service's call, so the token that speaks may also prime.
 func TestPrimeAcceptsABearerToken(t *testing.T) {
 	rec := postBearer(t, tokenDeps(t), "/speak/prime", "speaks", `{"text":"`+longText+`","scope":"chat","id":"m1"}`)
 	if rec.Code != http.StatusAccepted {

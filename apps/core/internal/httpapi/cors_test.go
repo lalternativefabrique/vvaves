@@ -46,7 +46,7 @@ func TestSpeakAnswersAPreflightForAnyOrigin(t *testing.T) {
 // never gets past the first request.
 func TestOnlySpeakAnswersAPreflight(t *testing.T) {
 	h := httpapi.New(guardedDeps(t))
-	for _, path := range []string{"/speak/prime", "/speak/pregenerate", "/speak/exists", "/search"} {
+	for _, path := range []string{"/speak/prime", "/speak/pregenerate", "/speak/exists"} {
 		if rec := options(t, h, path); rec.Code != http.StatusMethodNotAllowed {
 			t.Errorf("OPTIONS %s = %d, want 405", path, rec.Code)
 		}
