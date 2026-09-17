@@ -1,0 +1,1378 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "Search, fetch, render and speak for every product, plus the admin API of the applications registry.\n\nThe web and speak routes answer at the root; the admin API is\nunder /api/v1, which is why no global base path is declared.",
+        "title": "Vvaves",
+        "contact": {},
+        "version": "0.3.0"
+    },
+    "paths": {
+        "/api/v1/admin/apps": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Every registered application, key withheld",
+                "operationId": "listApps",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.AppListDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admit an application and hand its key out once",
+                "operationId": "registerApp",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/registry.RegisterRequest"
+                            }
+                        }
+                    },
+                    "description": "The issuer name the application signs as",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.CredentialsDTO"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/apps/{name}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "End an application's access at once",
+                "operationId": "revokeApp",
+                "parameters": [
+                    {
+                        "description": "Application name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/apps/{name}/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Mint an application a new key; the old one works for a day",
+                "operationId": "rotateAppKey",
+                "parameters": [
+                    {
+                        "description": "Application name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.CredentialsDTO"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/registry.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/crawl": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "Start a crawl over a scope; results are read back by id",
+                "operationId": "startCrawl",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.crawlRequest"
+                            }
+                        }
+                    },
+                    "description": "site and scope",
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/crawl.Job"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/crawl/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "A crawl's progress and the pages it has read so far",
+                "operationId": "crawlStatus",
+                "parameters": [
+                    {
+                        "description": "crawl id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "first page to return",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "how many pages to return",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.crawlStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fetch": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "The page's main text, rendering it when a static read comes back empty",
+                "operationId": "fetchPage",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.fetchRequest"
+                            }
+                        }
+                    },
+                    "description": "page to read",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.fetchResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/healthz": {
+            "get": {
+                "tags": [
+                    "ops"
+                ],
+                "summary": "Liveness",
+                "operationId": "healthz",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.healthResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/map": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "Every URL a site declares or links to, within a scope",
+                "operationId": "mapSite",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.mapRequest"
+                            }
+                        }
+                    },
+                    "description": "site and scope",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.mapResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/render": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "The page's HTML after its JavaScript has run",
+                "operationId": "renderPage",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.renderRequest"
+                            }
+                        }
+                    },
+                    "description": "page to render",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.renderResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "web"
+                ],
+                "summary": "Ranked web results, optionally with the pages' text",
+                "operationId": "search",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.searchRequest"
+                            }
+                        }
+                    },
+                    "description": "query",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.searchResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/speak": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Answers audio bytes, not JSON. With stream=false the whole\nreading comes back with a Content-Length and ranges; with\nstream=true each piece is emitted as it is read, length-prefixed\nunder application/x-lalter-audio-frames.",
+                "tags": [
+                    "speak"
+                ],
+                "summary": "Read a text aloud, from the store when it is already there",
+                "operationId": "speak",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.speakRequest"
+                            }
+                        }
+                    },
+                    "description": "text to read",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "audio/mpeg": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "audio/mpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "audio/mpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "audio/mpeg": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/speak/exists": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "speak"
+                ],
+                "summary": "Whether a reading is already stored, without reading its bytes",
+                "operationId": "speakExists",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.speakRequest"
+                            }
+                        }
+                    },
+                    "description": "reading to look for",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.existsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/speak/pregenerate": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "For a text expected to be heard more than once. It holds a\nsynthesis slot, so prefer /speak/prime for a text that may never\nbe played. Takes an application key.",
+                "tags": [
+                    "speak"
+                ],
+                "summary": "Read a whole text ahead of time and keep it",
+                "operationId": "pregenerateSpeak",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.speakRequest"
+                            }
+                        }
+                    },
+                    "description": "text to read in full",
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/speak/prime": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Answers 202 without waiting: nobody is listening yet. Takes an\napplication key — a browser signature is good for /speak alone.",
+                "tags": [
+                    "speak"
+                ],
+                "summary": "Read a text's opening ahead of time, so the first listen starts at once",
+                "operationId": "primeSpeak",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.speakRequest"
+                            }
+                        }
+                    },
+                    "description": "text whose opening to read",
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "/"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header"
+            },
+            "ServiceKey": {
+                "type": "apiKey",
+                "name": "X-Vvaves-Key",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "crawl.Job": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "failed": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "pages": {
+                        "type": "integer"
+                    },
+                    "scope": {
+                        "$ref": "#/components/schemas/crawl.Scope"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
+            "crawl.Scope": {
+                "type": "object",
+                "properties": {
+                    "exclude_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "include_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "max_depth": {
+                        "type": "integer"
+                    },
+                    "max_pages": {
+                        "type": "integer"
+                    },
+                    "seed": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "crawl.StoredPage": {
+                "type": "object",
+                "properties": {
+                    "depth": {
+                        "type": "integer"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "markdown": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.crawlRequest": {
+                "type": "object",
+                "properties": {
+                    "exclude_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "include_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "max_depth": {
+                        "type": "integer"
+                    },
+                    "max_pages": {
+                        "type": "integer"
+                    },
+                    "seed": {
+                        "description": "Seed \"sitemap\" starts the crawl from every URL the site declares.",
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.crawlStatusResponse": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "failed": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "next": {
+                        "type": "integer"
+                    },
+                    "pages": {
+                        "type": "integer"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/crawl.StoredPage"
+                        }
+                    },
+                    "scope": {
+                        "$ref": "#/components/schemas/crawl.Scope"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.errorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.existsResponse": {
+                "type": "object",
+                "properties": {
+                    "ready": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "httpapi.fetchRequest": {
+                "type": "object",
+                "properties": {
+                    "format": {
+                        "description": "Format picks which rendering of the page comes back: \"text\" flattens\nit, \"markdown\" keeps headings, tables and links. Empty returns both.",
+                        "type": "string"
+                    },
+                    "max_runes": {
+                        "type": "integer"
+                    },
+                    "paginate": {
+                        "type": "integer"
+                    },
+                    "render": {
+                        "type": "boolean"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.fetchResponse": {
+                "type": "object",
+                "properties": {
+                    "markdown": {
+                        "type": "string"
+                    },
+                    "pages": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.healthResponse": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "httpapi.mapRequest": {
+                "type": "object",
+                "properties": {
+                    "deadline_ms": {
+                        "type": "integer"
+                    },
+                    "exclude_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "include_paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "max_depth": {
+                        "type": "integer"
+                    },
+                    "max_pages": {
+                        "type": "integer"
+                    },
+                    "seed": {
+                        "description": "Seed \"sitemap\" starts the crawl from every URL the site declares.",
+                        "type": "string"
+                    },
+                    "sitemap": {
+                        "description": "Sitemap reads the site's sitemaps before walking its links. On by\ndefault: it is the cheapest and most complete source there is.",
+                        "type": "boolean"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.mapResponse": {
+                "type": "object",
+                "properties": {
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.openGraph": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "type": "string"
+                    },
+                    "site_name": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.renderRequest": {
+                "type": "object",
+                "properties": {
+                    "timeout_ms": {
+                        "type": "integer"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.renderResponse": {
+                "type": "object",
+                "properties": {
+                    "final_url": {
+                        "type": "string"
+                    },
+                    "html": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.result": {
+                "type": "object",
+                "properties": {
+                    "author": {
+                        "type": "string"
+                    },
+                    "content_error": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "duration": {
+                        "type": "string"
+                    },
+                    "favicon": {
+                        "type": "string"
+                    },
+                    "markdown": {
+                        "type": "string"
+                    },
+                    "open_graph": {
+                        "$ref": "#/components/schemas/httpapi.openGraph"
+                    },
+                    "published_at": {
+                        "type": "string"
+                    },
+                    "score": {
+                        "type": "number"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "source_type": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.searchRequest": {
+                "type": "object",
+                "properties": {
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "content": {
+                        "description": "Content reads the first N results' pages into the response, so one\ncall gives an agent what it would otherwise fetch one by one.",
+                        "type": "integer"
+                    },
+                    "content_runes": {
+                        "type": "integer"
+                    },
+                    "deadline_ms": {
+                        "type": "integer"
+                    },
+                    "format": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "q": {
+                        "type": "string"
+                    },
+                    "time_range": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.searchResponse": {
+                "type": "object",
+                "properties": {
+                    "partial": {
+                        "type": "boolean"
+                    },
+                    "query": {
+                        "type": "string"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/httpapi.result"
+                        }
+                    }
+                }
+            },
+            "httpapi.speakRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "description": "Scope and ID name where a reading is kept. Both optional: an ID lets a\ncaller prime a reading before anyone asks for it, since priming means\nnaming ahead of time what will be listened to. Without one the reading\nis still cached, keyed by the text alone — a second listen of the same\nwords finds it, which no caller has to opt into.",
+                        "type": "string"
+                    },
+                    "stream": {
+                        "type": "boolean"
+                    },
+                    "text": {
+                        "type": "string"
+                    }
+                }
+            },
+            "registry.AppDTO": {
+                "type": "object",
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "grace_until": {
+                        "type": "string"
+                    },
+                    "last4": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "revoked_at": {
+                        "type": "string"
+                    },
+                    "rotated_at": {
+                        "type": "string"
+                    }
+                }
+            },
+            "registry.AppListDTO": {
+                "type": "object",
+                "properties": {
+                    "apps": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/registry.AppDTO"
+                        }
+                    }
+                }
+            },
+            "registry.CredentialsDTO": {
+                "type": "object",
+                "properties": {
+                    "grace_until": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "registry.ErrorDTO": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "registry.RegisterRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

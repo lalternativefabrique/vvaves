@@ -81,6 +81,19 @@ type mapResponse struct {
 	Links []string `json:"links"`
 }
 
+// handleMap godoc
+// @Summary  Every URL a site declares or links to, within a scope
+// @Tags     web
+// @Accept   json
+// @Produce  json
+// @Param    body  body      mapRequest  true  "site and scope"
+// @Success  200   {object}  mapResponse
+// @Failure  400   {object}  errorResponse
+// @Failure  502   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /map [post]
+// @ID       mapSite
 func handleMap(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := d.guardService(r); err != nil {
@@ -124,6 +137,19 @@ type crawlRequest struct {
 	scopeRequest
 }
 
+// handleCrawl godoc
+// @Summary  Start a crawl over a scope; results are read back by id
+// @Tags     web
+// @Accept   json
+// @Produce  json
+// @Param    body  body      crawlRequest  true  "site and scope"
+// @Success  202   {object}  crawl.Job
+// @Failure  400   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /crawl [post]
+// @ID       startCrawl
 func handleCrawl(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.CrawlStore == nil || d.CrawlQueue == nil {
@@ -159,6 +185,20 @@ type crawlStatusResponse struct {
 	Next    *int               `json:"next,omitempty"`
 }
 
+// handleCrawlStatus godoc
+// @Summary  A crawl's progress and the pages it has read so far
+// @Tags     web
+// @Produce  json
+// @Param    id      path      string  true   "crawl id"
+// @Param    offset  query     int     false  "first page to return"
+// @Param    limit   query     int     false  "how many pages to return"
+// @Success  200     {object}  crawlStatusResponse
+// @Failure  404     {object}  errorResponse
+// @Failure  503     {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /crawl/{id} [get]
+// @ID       crawlStatus
 func handleCrawlStatus(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.CrawlStore == nil {

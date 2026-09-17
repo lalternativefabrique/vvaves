@@ -1,0 +1,20 @@
+version: 1
+kind: pipeline
+name: generate
+
+tools:
+  go: "1.26.0"
+  node: "24.16.0"
+
+steps:
+  - name: contract
+    tools: [go, node]
+    workdir: apps/core
+    run: |
+      set -euo pipefail
+      go run github.com/swaggo/swag/cmd/swag@v1.16.6 init --parseDependency --parseInternal -q --dir "./"
+      # swag emits OpenAPI 2.0; consumers generate their clients from 3.x, and
+      # making each one run this conversion is what serving the contract is
+      # meant to stop.
+      cd docs
+      npx -y swagger2openapi@7 swagger.json -o contract/openapi3.json

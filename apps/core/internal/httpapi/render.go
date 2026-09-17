@@ -28,6 +28,20 @@ type FinalURLRenderer interface {
 	RenderPage(ctx context.Context, url string, timeout time.Duration) (html, finalURL string, err error)
 }
 
+// handleRender godoc
+// @Summary  The page's HTML after its JavaScript has run
+// @Tags     web
+// @Accept   json
+// @Produce  json
+// @Param    body  body      renderRequest  true  "page to render"
+// @Success  200   {object}  renderResponse
+// @Failure  400   {object}  errorResponse
+// @Failure  502   {object}  errorResponse
+// @Failure  503   {object}  errorResponse
+// @Security ServiceKey
+// @Security BearerAuth
+// @Router   /render [post]
+// @ID       renderPage
 func handleRender(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		full, ok := d.Renderer.(FinalURLRenderer)

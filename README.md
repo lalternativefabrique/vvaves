@@ -8,11 +8,15 @@ the speech server sit behind it, and callers only ever address vvaves.
 POST /search   {"q": "gramsci"}                     -> ranked results
 POST /fetch    {"url": "https://…"}                 -> the page's main text
 POST /render   {"url": "https://…"}                 -> rendered HTML
+POST /map      {"url": "https://…"}                 -> the site's URLs
+POST /crawl    {"url": "https://…"}                 -> 202, a crawl id
+GET  /crawl/{id}                                    -> its progress and pages
 POST /speak    {"text": "…"}                        -> audio
 POST /speak/prime       {"text": "…", "id": "…"}    -> 202, opening read ahead
 POST /speak/pregenerate {"text": "…", "id": "…"}    -> 202, whole reading cached
 POST /speak/exists      {"text": "…", "id": "…"}    -> {"ready": true}
 GET  /healthz                                       -> {"ok": true}
+GET  /openapi.json                                  -> this contract, OpenAPI 3
 ```
 
 It is the HTTP layer over
@@ -68,6 +72,49 @@ an unbounded render is a request that never finishes, and on a shared browser
 it starves everything queued behind it. A page that refuses the connection or
 never settles answers `502` — routine on the open web, and callers treat it as
 "fall back to the static result" rather than as fatal.
+
+### `POST /map`
+
+```json
+{"url": "https://…", "max_depth": 3, "limit": 100,
+ "include_paths": ["/docs"], "exclude_paths": ["/blog"],
+ "seed": "sitemap", "sitemap": true, "deadline_ms": 20000}
+```
+```json
+{"url": "https://…", "links": ["https://…/a", "https://…/b"]}
+```
+
+Every URL a site declares or links to, within a scope. Synchronous and
+bounded: `limit` defaults to 100 and is clamped to 1000, the deadline to 50s.
+Sitemaps are read before links are walked and are on by default — the cheapest
+and most complete source a site offers.
+
+### `POST /crawl`
+
+```json
+{"url": "https://…", "max_depth": 3, "max_pages": 50,
+ "include_paths": ["/docs"], "exclude_paths": ["/blog"]}
+```
+
+Starts a crawl and answers `202` with a job id: the pages are read behind the
+request rather than under it, since a hundred of them is minutes of work. At
+most 100 pages. Answers `503` where no crawl store is configured — it needs
+NATS, which `/search` and `/fetch` do not.
+
+A crawl reads each page exactly as `/fetch` does: the same address check, the
+same cache, the same renderer. It can reach nothing a single fetch could not.
+
+### `GET /crawl/{id}`
+
+```json
+{"id": "…", "status": "running", "pages": 12, "failed": 1,
+ "results": [{"url": "https://…", "depth": 1, "title": "…", "markdown": "…"}],
+ "next": 20}
+```
+
+The job's progress and the pages read so far, 20 at a time — `offset` and
+`limit` walk them, and `next` is the offset of the following page when there
+is one.
 
 ### `POST /speak`
 
@@ -284,6 +331,20 @@ Without one, vvaves runs as before on `SPEAK_KEYS`; with one, those pairs
 still count for the issuers the registry does not name. The admin API (`/api/v1/admin/apps`) sits behind the JWT the web app
 mints from its Better Auth session with `JWT_SECRET`; the browser only ever
 reaches it through the web app's own proxy.
+
+## The contract
+
+`GET /openapi.json` serves this API's OpenAPI 3 description, generated from the
+handlers themselves by `sklp run generate` and committed beside them. CI
+regenerates it and fails on a difference, so a handler cannot change without
+the contract following.
+
+It is served rather than copied because a copy nobody is forced to refresh goes
+stale silently. Both drifts this replaces were exactly that: the README
+documented eight routes out of eleven for as long as `/map` and `/crawl`
+existed, and `packages/go/search`'s tornade client — written by hand against
+`/search` alone — never learned the other two exist. A consumer generating from
+this document gets a compile error where it used to get a 404.
 
 ## Clients
 

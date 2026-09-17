@@ -43,6 +43,23 @@ steps:
       go vet ./... ./apps/core/...
       go test ./... ./apps/core/...
 
+  # The served contract is what every consumer generates its client from, so a
+  # handler changed without regenerating would hand them a spec describing
+  # routes this binary no longer has.
+  - name: contract-current
+    scope: [facade]
+    tools: [go, node]
+    workdir: apps/core
+    run: |
+      set -euo pipefail
+      go run github.com/swaggo/swag/cmd/swag@v1.16.6 init --parseDependency --parseInternal -q --dir "./"
+      cd docs
+      npx -y swagger2openapi@7 swagger.json -o /tmp/openapi3.json
+      diff -u contract/openapi3.json /tmp/openapi3.json || {
+        echo "the committed contract is behind the handlers — run: sklp run generate" >&2
+        exit 1
+      }
+
   - name: migrate-check
     scope: [migrate]
     workdir: apps/migrations
