@@ -3,8 +3,13 @@ kind: pipeline
 name: publish
 space: false
 
-registry:
-  provider: scaleway
+registries:
+  rg.fr-par.scw.cloud:
+    username: nologin
+    password: ${SCW_SECRET_KEY}
+
+secrets:
+  - SCW_SECRET_KEY
 
 tag:
   strategy: date-sha
