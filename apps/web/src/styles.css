@@ -2,10 +2,11 @@
 @import '@lalternative/admin/styles.css';
 
 /* Tailwind v4 skips node_modules when scanning for class names, so every
-   class the shared admin and auth screens use would be compiled away and
+   class the shared admin, auth and keys screens use would be compiled away and
    they would render as bare HTML. */
 @source "../node_modules/@lalternative/auth/dist";
 @source "../node_modules/@lalternative/admin/dist";
+@source "../node_modules/@lalternative/keys/dist";
 
 /* The shared admin sets its palette as bare HSL triplets on `.lalt-admin`;
    Tailwind only emits `bg-background`, `text-muted-foreground`, … once they
