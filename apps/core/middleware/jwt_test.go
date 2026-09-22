@@ -11,10 +11,15 @@ import (
 
 func mint(t *testing.T, secret string, exp time.Time) string {
 	t.Helper()
-	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
+	return mintWith(t, secret, claims{
 		Email: "ops@example", Name: "Ops",
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1", ExpiresAt: jwt.NewNumericDate(exp)},
 	})
+}
+
+func mintWith(t *testing.T, secret string, cl claims) string {
+	t.Helper()
+	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, cl)
 	s, err := tok.SignedString([]byte(secret))
 	if err != nil {
 		t.Fatal(err)
@@ -41,6 +46,23 @@ func TestAValidTokenResolvesTheUser(t *testing.T) {
 	code, u, seen := call("s3cret", mint(t, "s3cret", time.Now().Add(time.Minute)))
 	if code != http.StatusOK || !seen || u.ID != "u-1" || u.Email != "ops@example" {
 		t.Fatalf("code=%d user=%+v seen=%v", code, u, seen)
+	}
+}
+
+func TestAValidTokenCarriesTheProviderIdentity(t *testing.T) {
+	exp := jwt.NewNumericDate(time.Now().Add(time.Minute))
+	_, u, _ := call("s3cret", mintWith(t, "s3cret", claims{
+		IdentityID:       "8f3a",
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1", ExpiresAt: exp},
+	}))
+	if u.IdentityID != "8f3a" {
+		t.Fatalf("identityId = %q, want 8f3a", u.IdentityID)
+	}
+	_, u, _ = call("s3cret", mintWith(t, "s3cret", claims{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "u-1", ExpiresAt: exp},
+	}))
+	if u.IdentityID != "" {
+		t.Fatalf("identityId = %q, want empty for an account never enrolled", u.IdentityID)
 	}
 }
 
