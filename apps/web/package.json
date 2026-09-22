@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@lalternative/admin": "^0.10.0",
-    "@lalternative/auth": "^0.13.3",
+    "@lalternative/auth": "^0.19.1",
     "@types/pg": "^8.16.0",
     "better-auth": "^1.6.11",
     "pg": "^8.18.0",
