@@ -27,6 +27,9 @@ export function mintCoreToken(session: PlatformSession): string {
       sub: session.user.id,
       email: session.user.email,
       name: session.user.name,
+      identityId:
+        (session.user as { identityId?: string | null }).identityId ??
+        undefined,
       exp: Math.floor(Date.now() / 1000) + TTL_SECONDS,
     }),
   )

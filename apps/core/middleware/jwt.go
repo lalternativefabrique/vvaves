@@ -16,11 +16,16 @@ type User struct {
 	ID    string
 	Email string
 	Name  string
+	// IdentityID is the person's id at the suite's identity provider, the
+	// owner a customer key is issued against. Empty for an account that never
+	// signed in through it.
+	IdentityID string
 }
 
 type claims struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	IdentityID string `json:"identityId"`
 	jwt.RegisteredClaims
 }
 
@@ -81,5 +86,5 @@ func parse(raw string, key []byte) (User, error) {
 	if err != nil || !tok.Valid || cl.Subject == "" {
 		return User{}, errors.New("invalid token")
 	}
-	return User{ID: cl.Subject, Email: cl.Email, Name: cl.Name}, nil
+	return User{ID: cl.Subject, Email: cl.Email, Name: cl.Name, IdentityID: cl.IdentityID}, nil
 }
