@@ -56,16 +56,19 @@ async function machineToken(): Promise<string> {
   const now = Date.now()
   if (cached && cached.expiresAt > now + 30_000) return cached.token
 
-  const res = await fetch(`${ISSUER}/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      scope: SCOPE,
-    }),
-  })
+  let res: Response
+  try {
+    res = await fetch(`${ISSUER}/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: basicAuth(CLIENT_ID, CLIENT_SECRET),
+      },
+      body: tokenRequest(SCOPE),
+    })
+  } catch {
+    throw new KeysError({ kind: 'unavailable', reason: 'issuer_unreachable' })
+  }
   if (!res.ok) {
     throw new KeysError({ kind: 'unavailable', reason: 'token_refused' })
   }
@@ -83,18 +86,31 @@ async function machineToken(): Promise<string> {
   return cached.token
 }
 
+// The provisioner is declared client_secret_basic, and the machine API only
+// admits a token whose audience names urbangate: a token asked without it
+// verifies at Hydra and is refused everywhere else.
+export function basicAuth(id: string, secret: string) {
+  return `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`
+}
+
+export function tokenRequest(scope: string) {
+  return new URLSearchParams({
+    grant_type: 'client_credentials',
+    scope,
+    audience: 'urbangate',
+  })
+}
+
 async function call(
   path: string,
   init: RequestInit & { method: string },
 ): Promise<Response> {
+  const token = await machineToken()
   let res: Response
   try {
     res = await fetch(`${API}${path}`, {
       ...init,
-      headers: {
-        ...init.headers,
-        Authorization: `Bearer ${await machineToken()}`,
-      },
+      headers: { ...init.headers, Authorization: `Bearer ${token}` },
     })
   } catch {
     throw new KeysError({ kind: 'unavailable', reason: 'unreachable' })
