@@ -32,6 +32,67 @@ definitions:
       text:
         type: string
     type: object
+  keys.CreateKeyRequest:
+    properties:
+      label:
+        type: string
+      scopes:
+        items:
+          type: string
+        type: array
+    type: object
+  keys.CreatedKeyDTO:
+    properties:
+      audience:
+        items:
+          type: string
+        type: array
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      scopes:
+        items:
+          type: string
+        type: array
+      secret:
+        type: string
+    type: object
+  keys.ErrorDTO:
+    properties:
+      error:
+        type: string
+    type: object
+  keys.KeyDTO:
+    properties:
+      audience:
+        items:
+          type: string
+        type: array
+      createdAt:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      scopes:
+        items:
+          type: string
+        type: array
+    type: object
+  keys.KeyListDTO:
+    properties:
+      keys:
+        items:
+          $ref: '#/definitions/keys.KeyDTO'
+        type: array
+    type: object
   registry.AppDTO:
     properties:
       active:
@@ -85,6 +146,99 @@ info:
   title: Vvaves
   version: 0.3.0
 paths:
+  /api/keys:
+    get:
+      operationId: listKeys
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/keys.KeyListDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: List the caller's keys for this product
+      tags:
+      - keys
+    post:
+      consumes:
+      - application/json
+      description: The key is signed by urbangate and returned once; it is stored
+        nowhere.
+      operationId: createKey
+      parameters:
+      - description: Label, and optionally the scopes
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/keys.CreateKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/keys.CreatedKeyDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Issue a key the caller's application will present to this product
+      tags:
+      - keys
+  /api/keys/{id}:
+    delete:
+      description: 'Recorded before the key is dropped: a 503 left the key working,
+        and retrying is safe.'
+      operationId: revokeKey
+      parameters:
+      - description: The key's id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/keys.ErrorDTO'
+      security:
+      - BearerAuth: []
+      summary: Revoke one of the caller's keys
+      tags:
+      - keys
   /api/v1/admin/apps:
     get:
       operationId: listApps

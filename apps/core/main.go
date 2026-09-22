@@ -35,6 +35,7 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
+	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
 	"github.com/lalternativefabrique/vvaves/core/registry"
@@ -70,9 +71,7 @@ func main() {
 	if apps != nil {
 		apps.RegisterRoutes(mux, "/api/v1", webAuth)
 	}
-	relay := keyRelay(customerKeys)
-	mux.Handle("/api/keys", webAuth(http.StripPrefix("/api/keys", relay)))
-	mux.Handle("/api/keys/", webAuth(http.StripPrefix("/api/keys", relay)))
+	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", webAuth)
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: mux}
 
