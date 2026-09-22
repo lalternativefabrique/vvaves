@@ -13,8 +13,6 @@ import (
 type Config struct {
 	Addr string
 
-
-
 	// NatsURL, read from NATS_URL, points the page cache at a JetStream KV
 	// bucket every replica shares. Empty keeps the cache in this process.
 	// FetchCacheMaxBytes bounds the shared bucket, read from
@@ -22,7 +20,6 @@ type Config struct {
 	// CrawlMaxRunes bounds each rendering of a crawled page, read from
 	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
 	// read from CRAWL_MAX_BYTES.
-
 
 	TTSURL         string
 	TTSAPIKey      string
@@ -57,6 +54,13 @@ type Config struct {
 	// OIDCAudience is the name this vvaves answers to in a token's aud,
 	// read from OIDC_AUDIENCE, "vvaves" by default.
 	OIDCAudience string
+	// ProvisionerClientID and ProvisionerClientSecret are this product's
+	// credential at the identity provider, read from
+	// URBANGATE_PROVISIONER_CLIENT_ID and URBANGATE_PROVISIONER_CLIENT_SECRET.
+	// They read the list of revoked customer keys; no secret accepts no
+	// customer key at all.
+	ProvisionerClientID     string
+	ProvisionerClientSecret string
 	// SpeakUnguarded lets the speak routes answer with no key at all, read
 	// from SPEAK_UNGUARDED=true. For a vvaves nothing outside the cluster
 	// reaches, and for a laptop; never for one behind a public name.
@@ -70,9 +74,6 @@ type Config struct {
 func Load() Config {
 	return Config{
 		Addr: env("LISTEN_ADDR", ":8080"),
-
-
-
 
 		TTSURL:    os.Getenv("PIPER_URL"),
 		TTSAPIKey: os.Getenv("TTS_API_KEY"),
@@ -107,6 +108,9 @@ func Load() Config {
 		SpeakUnguarded:        os.Getenv("SPEAK_UNGUARDED") == "true",
 		OIDCIssuerURL:         os.Getenv("OIDC_ISSUER_URL"),
 		OIDCAudience:          envString("OIDC_AUDIENCE", "vvaves"),
+
+		ProvisionerClientID:     envString("URBANGATE_PROVISIONER_CLIENT_ID", "vvaves-provisioner"),
+		ProvisionerClientSecret: os.Getenv("URBANGATE_PROVISIONER_CLIENT_SECRET"),
 	}
 }
 

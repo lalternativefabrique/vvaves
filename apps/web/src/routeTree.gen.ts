@@ -11,13 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAppsRouteImport } from './routes/admin/apps'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as ApiMeRouteImport } from './routes/api/me'
+import { Route as AppKeysRouteImport } from './routes/app/keys'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiAuthSsoRouteImport } from './routes/api/auth/sso'
+import { Route as ApiKeysIndexRouteImport } from './routes/api/keys.index'
+import { Route as ApiKeysIdRouteImport } from './routes/api/keys.$id'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
 import { Route as ApiAdminUsersUserIdRouteImport } from './routes/api/admin/users.$userId'
 
@@ -29,6 +34,16 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -56,6 +71,11 @@ const ApiMeRoute = ApiMeRouteImport.update({
   path: '/api/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppKeysRoute = AppKeysRouteImport.update({
+  id: '/keys',
+  path: '/keys',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -64,6 +84,16 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 const ApiAuthSsoRoute = ApiAuthSsoRouteImport.update({
   id: '/api/auth/sso',
   path: '/api/auth/sso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKeysIndexRoute = ApiKeysIndexRouteImport.update({
+  id: '/api/keys/',
+  path: '/api/keys/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKeysIdRoute = ApiKeysIdRouteImport.update({
+  id: '/api/keys/$id',
+  path: '/api/keys/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
@@ -80,40 +110,55 @@ const ApiAdminUsersUserIdRoute = ApiAdminUsersUserIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/admin/apps': typeof AdminAppsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/me': typeof ApiMeRoute
+  '/app/keys': typeof AppKeysRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/sso': typeof ApiAuthSsoRoute
+  '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/keys/': typeof ApiKeysIndexRoute
   '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/admin/apps': typeof AdminAppsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/me': typeof ApiMeRoute
+  '/app/keys': typeof AppKeysRoute
   '/admin': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/sso': typeof ApiAuthSsoRoute
+  '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/keys': typeof ApiKeysIndexRoute
   '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/admin/apps': typeof AdminAppsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin_/login': typeof AdminLoginRoute
   '/api/me': typeof ApiMeRoute
+  '/app/keys': typeof AppKeysRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/sso': typeof ApiAuthSsoRoute
+  '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
+  '/api/keys/': typeof ApiKeysIndexRoute
   '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRouteTypes {
@@ -121,50 +166,69 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/app'
+    | '/login'
     | '/admin/apps'
     | '/admin/users'
     | '/admin/login'
     | '/api/me'
+    | '/app/keys'
     | '/admin/'
     | '/api/auth/$'
     | '/api/auth/sso'
+    | '/api/keys/$id'
     | '/api/v1/$'
+    | '/api/keys/'
     | '/api/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
+    | '/login'
     | '/admin/apps'
     | '/admin/users'
     | '/admin/login'
     | '/api/me'
+    | '/app/keys'
     | '/admin'
     | '/api/auth/$'
     | '/api/auth/sso'
+    | '/api/keys/$id'
     | '/api/v1/$'
+    | '/api/keys'
     | '/api/admin/users/$userId'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/app'
+    | '/login'
     | '/admin/apps'
     | '/admin/users'
     | '/admin_/login'
     | '/api/me'
+    | '/app/keys'
     | '/admin/'
     | '/api/auth/$'
     | '/api/auth/sso'
+    | '/api/keys/$id'
     | '/api/v1/$'
+    | '/api/keys/'
     | '/api/admin/users/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApiMeRoute: typeof ApiMeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthSsoRoute: typeof ApiAuthSsoRoute
+  ApiKeysIdRoute: typeof ApiKeysIdRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
+  ApiKeysIndexRoute: typeof ApiKeysIndexRoute
   ApiAdminUsersUserIdRoute: typeof ApiAdminUsersUserIdRoute
 }
 
@@ -182,6 +246,20 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -219,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/keys': {
+      id: '/app/keys'
+      path: '/keys'
+      fullPath: '/app/keys'
+      preLoaderRoute: typeof AppKeysRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -231,6 +316,20 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/sso'
       fullPath: '/api/auth/sso'
       preLoaderRoute: typeof ApiAuthSsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/keys/': {
+      id: '/api/keys/'
+      path: '/api/keys'
+      fullPath: '/api/keys/'
+      preLoaderRoute: typeof ApiKeysIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/keys/$id': {
+      id: '/api/keys/$id'
+      path: '/api/keys/$id'
+      fullPath: '/api/keys/$id'
+      preLoaderRoute: typeof ApiKeysIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/$': {
@@ -264,14 +363,28 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AppRouteChildren {
+  AppKeysRoute: typeof AppKeysRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppKeysRoute: AppKeysRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApiMeRoute: ApiMeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthSsoRoute: ApiAuthSsoRoute,
+  ApiKeysIdRoute: ApiKeysIdRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
+  ApiKeysIndexRoute: ApiKeysIndexRoute,
   ApiAdminUsersUserIdRoute: ApiAdminUsersUserIdRoute,
 }
 export const routeTree = rootRouteImport

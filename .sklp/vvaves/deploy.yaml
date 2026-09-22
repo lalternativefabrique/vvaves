@@ -23,6 +23,8 @@ services:
       REGISTRY_ENCRYPTION_KEY: ${REGISTRY_ENCRYPTION_KEY}
       OIDC_ISSUER_URL: https://id.urbangate.dev
       OIDC_AUDIENCE: vvaves
+      URBANGATE_PROVISIONER_CLIENT_ID: vvaves-provisioner
+      URBANGATE_PROVISIONER_CLIENT_SECRET: ${URBANGATE_PROVISIONER_CLIENT_SECRET}
       SEARXNG_URL: http://searxng:8080
       NATS_URL: nats://nats:4222
       PIPER_URL: http://tts:5000
@@ -57,6 +59,8 @@ services:
       URBANGATE_ISSUER_URL: https://id.urbangate.dev
       URBANGATE_CLIENT_ID: vvaves-admin
       URBANGATE_CLIENT_SECRET: ${URBANGATE_CLIENT_SECRET}
+      URBANGATE_PROVISIONER_CLIENT_ID: vvaves-provisioner
+      URBANGATE_PROVISIONER_CLIENT_SECRET: ${URBANGATE_PROVISIONER_CLIENT_SECRET}
     resources:
       cpu: "0.5"
       memory: 512M

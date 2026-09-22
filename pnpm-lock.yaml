@@ -16,6 +16,9 @@ importers:
       '@lalternative/auth':
         specifier: ^0.19.1
         version: 0.19.1(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@lalternative/keys':
+        specifier: 0.2.1
+        version: 0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.3.3(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))
@@ -369,6 +372,12 @@ packages:
     resolution: {integrity: sha512-jBb93dVWFgM84KMnn98FX9IWUAxphjpYM+CvxkR3mUrw8GdfVOXJNUmWZbV5er0blpyEx7JOd10A4PAZJd9Siw==}
     peerDependencies:
       better-auth: '>=1.7.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@lalternative/keys@0.2.1':
+    resolution: {integrity: sha512-4iHas/aU65bbri7yQumWtrasJ7899tig/QGH1qFBAoss9bKfk0Tbp6OJCbgolqghDxtVgkjYfX5umSWuLfWY5Q==}
+    peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
@@ -2739,6 +2748,11 @@ snapshots:
   '@lalternative/auth@0.19.1(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       better-auth: 1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@lalternative/keys@0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
