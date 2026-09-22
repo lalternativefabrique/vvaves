@@ -12,9 +12,8 @@ import { getProfile } from '@/lib/services/auth'
  */
 const ssoStatus = createServerFn({ method: 'GET' }).handler(
   async (): Promise<{ enabled: boolean; providerId: string }> => {
-    const { ssoEnabled } = await import('@/lib/auth')
-    const { SSO_PROVIDER_ID } = await import('@/lib/sso-config')
-    return { enabled: ssoEnabled, providerId: SSO_PROVIDER_ID }
+    const { ssoEnabled, SSO_PROVIDER_ID } = await import('@/lib/auth')
+    return { enabled: ssoEnabled(), providerId: SSO_PROVIDER_ID }
   },
 )
 
