@@ -37,6 +37,9 @@ type Deps struct {
 	// Tokens verifies the bearer token a service obtained from the suite's
 	// identity provider. Nil accepts no such call.
 	Tokens BearerVerifier
+	// CustomerKeys verifies a key urbangate issued to a customer of this
+	// product. Nil accepts no such key.
+	CustomerKeys CustomerKeyVerifier
 	// Unguarded lets the speak routes answer with neither of the above: a
 	// deployment reachable only from inside the cluster, or a laptop. It has
 	// to be said; a vvaves that forgot its keys must refuse, not serve.

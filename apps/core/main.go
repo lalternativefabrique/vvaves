@@ -26,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lalternative/packages/go/appkeys"
 	"github.com/lalternative/packages/go/audioreader"
 	"github.com/lalternative/packages/go/eda/pkg/natsbus"
 	"github.com/lalternative/packages/go/svcauth"
@@ -56,6 +57,7 @@ func main() {
 		Verifier:     signed.NewLookupVerifier(keys.Keys),
 		AppKeyIssuer: keys.IssuerOf,
 		Tokens:       buildTokens(cfg),
+		CustomerKeys: buildCustomerKeys(cfg),
 		Unguarded:    cfg.SpeakUnguarded,
 	}
 	if cfg.SpeakUnguarded {
@@ -104,6 +106,55 @@ func buildTokens(cfg config.Config) httpapi.BearerVerifier {
 	}
 	log.Printf("vvaves: bearer tokens from %s for audience %q", cfg.OIDCIssuerURL, cfg.OIDCAudience)
 	return v
+}
+
+const revocationRetry = 30 * time.Second
+
+// buildCustomerKeys wires the keys urbangate issues to this product's
+// customers: verified offline against urbangate's own key set, refused when
+// the revocation list says so. Nil when no provisioner credential is
+// configured, and the interface stays nil rather than holding a typed nil.
+func buildCustomerKeys(cfg config.Config) httpapi.CustomerKeyVerifier {
+	if cfg.ProvisionerClientSecret == "" {
+		log.Print("vvaves: no URBANGATE_PROVISIONER_CLIENT_SECRET, customer keys are not accepted")
+		return nil
+	}
+	if cfg.OIDCIssuerURL == "" {
+		log.Fatal("vvaves: URBANGATE_PROVISIONER_CLIENT_SECRET needs OIDC_ISSUER_URL")
+	}
+	keys, err := appkeys.New(appkeys.Config{
+		Product:   cfg.OIDCAudience,
+		Urbangate: cfg.OIDCIssuerURL,
+		Provisioner: svcauth.HydraClientCredentials(
+			cfg.OIDCIssuerURL,
+			cfg.ProvisionerClientID,
+			cfg.ProvisionerClientSecret,
+			[]string{"urbangate"},
+			[]string{"urbangate:keys:issue"},
+		),
+		// The relay lives in the web app, which holds the session; this
+		// process only guards.
+		OwnerOf: func(*http.Request) (string, bool) { return "", false },
+	})
+	if err != nil {
+		log.Fatalf("vvaves: customer keys: %v", err)
+	}
+	// An identity provider that cannot be reached is not a reason to stop
+	// serving: the guard answers 503 to customer keys until the list has
+	// loaded, and every other credential keeps working. Run returns when the
+	// first load fails, so it is retried until it holds.
+	go func() {
+		for {
+			err := keys.Run(context.Background())
+			if err == nil {
+				return
+			}
+			log.Printf("vvaves: revocation list: %v (retrying in %s, customer keys refused meanwhile)", err, revocationRetry)
+			time.Sleep(revocationRetry)
+		}
+	}()
+	log.Printf("vvaves: customer keys verified against %s", cfg.OIDCIssuerURL)
+	return keys
 }
 
 func buildRegistry(cfg config.Config) (*registry.Service, *registry.KeySource) {
