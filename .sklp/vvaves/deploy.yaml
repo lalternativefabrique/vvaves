@@ -69,16 +69,67 @@ services:
       timeout: 120s
 
   postgres:
-    image: postgres:16-alpine
+    image: rg.fr-par.scw.cloud/platform-ops/postgres-pgbackrest-pg16:20260923-0744-052cb8cc8525
     port: 5432
     env:
       POSTGRES_USER: vvaves
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: vvaves
-    volumes: ["vvaves-pg-data:/var/lib/postgresql/data"]
+      PGDATA: /var/lib/postgresql/data
+      PGBACKREST_STANZA: vvaves
+      PGBACKREST_REPO1_S3_ENDPOINT: s3.gra.io.cloud.ovh.net
+      PGBACKREST_REPO1_S3_REGION: gra
+      PGBACKREST_REPO1_S3_BUCKET: vvaves-prod-backups
+      PGBACKREST_REPO1_S3_KEY: ${S3_ACCESS_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${S3_SECRET_KEY}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: gra
+    volumes:
+      - vvaves-pg-data:/var/lib/postgresql/data
+      - vvaves-pg-backups:/backups
+      - vvaves-wal-spool:/var/spool/pgbackrest
+    command:
+      [
+        "postgres",
+        "-c",
+        "archive_mode=on",
+        "-c",
+        "archive_command=pgbackrest --stanza=vvaves archive-push %p",
+        "-c",
+        "wal_level=replica",
+        "-c",
+        "archive_timeout=60",
+      ]
+    backup:
+      schedule: "0 3 * * *"
+      command:
+        [
+          "sh",
+          "-c",
+          "apk add --no-cache aws-cli >/dev/null && f=vvaves-$(date +%F).sql.gz && pg_dump -U vvaves vvaves | gzip > /backups/$f && aws --endpoint-url https://s3.gra.io.cloud.ovh.net s3 cp /backups/$f s3://vvaves-prod-backups/postgres/$f && find /backups -name '*.sql.gz' -mtime +7 -delete",
+        ]
     ready:
-      tcp: "5432"
-      timeout: 60s
+      log: "database system is ready to accept connections"
+      timeout: 120s
+
+  pgbackrest:
+    image: rg.fr-par.scw.cloud/platform-ops/pgbackrest-sidecar-pg16:20260923-0744-052cb8cc8525
+    depends_on: [postgres]
+    volumes:
+      - vvaves-pg-data:/var/lib/postgresql/data
+      - vvaves-wal-spool:/var/spool/pgbackrest
+    env:
+      PGBACKREST_STANZA: vvaves
+      PGHOST: postgres
+      PGUSER: vvaves
+      PGDATABASE: vvaves
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGBACKREST_REPO1_S3_ENDPOINT: s3.gra.io.cloud.ovh.net
+      PGBACKREST_REPO1_S3_REGION: gra
+      PGBACKREST_REPO1_S3_BUCKET: vvaves-prod-backups
+      PGBACKREST_REPO1_S3_KEY: ${S3_ACCESS_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${S3_SECRET_KEY}
 
   redis:
     image: redis:7-alpine
@@ -94,6 +145,18 @@ services:
     port: 4222
     volumes: ["nats-data:/data"]
     command: ["nats-server", "-js", "-sd", "/data"]
+    env:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: gra
+    backup:
+      schedule: "*/30 * * * *"
+      command:
+        [
+          "sh",
+          "-c",
+          "apk add --no-cache aws-cli >/dev/null && f=nats-$(date +%FT%H%M).tar.gz && tar czf /tmp/$f -C /data . && aws --endpoint-url https://s3.gra.io.cloud.ovh.net s3 cp /tmp/$f s3://vvaves-prod-backups/nats/$f && rm -f /tmp/$f",
+        ]
     resources:
       cpu: "250m"
       memory: 256M
@@ -233,6 +296,27 @@ jobs:
           - name: arxiv
             inactive: true
         YAML
+
+  restore-check:
+    image: rg.fr-par.scw.cloud/platform-ops/postgres-pgbackrest-pg16:20260923-0744-052cb8cc8525
+    command: ["pgbackrest-restore-check"]
+    schedule: "30 4 * * *"
+    depends_on: [postgres]
+    resources:
+      cpu: "1"
+      memory: 1G
+    env:
+      PGBACKREST_STANZA: vvaves
+      PGBACKREST_REPO1_S3_ENDPOINT: s3.gra.io.cloud.ovh.net
+      PGBACKREST_REPO1_S3_REGION: gra
+      PGBACKREST_REPO1_S3_BUCKET: vvaves-prod-backups
+      PGBACKREST_REPO1_S3_KEY: ${S3_ACCESS_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${S3_SECRET_KEY}
+      POSTGRES_USER: vvaves
+      POSTGRES_DB: vvaves
+      SKALPAI_ENDPOINT: https://api.skalpai.dev
+      SKALPAI_API_KEY: ${SKALPAI_API_KEY}
+      SKALPAI_SPACE: vvaves-production
 
 spaces:
   vvaves-production:
