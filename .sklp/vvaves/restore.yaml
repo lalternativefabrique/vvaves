@@ -1,0 +1,94 @@
+version: 1
+kind: deploy
+name: restore
+
+project_id: 7c56c44c-508e-4764-a1f8-9713e9ebcbbd
+
+registries:
+  rg.fr-par.scw.cloud:
+    username: nologin
+    password: ${SCW_SECRET_KEY}
+
+jobs:
+  restore-check:
+    image: rg.fr-par.scw.cloud/platform-ops/postgres-pgbackrest-pg16:20260923-0744-052cb8cc8525
+    command: ["pgbackrest-restore-check"]
+    schedule: "30 6 * * *"
+    volumes: ["restore-scratch:/restore"]
+    resources:
+      cpu: "1"
+      memory: 1G
+    env:
+      PGBACKREST_STANZA: vvaves
+      PGBACKREST_REPO1_S3_ENDPOINT: s3.gra.io.cloud.ovh.net
+      PGBACKREST_REPO1_S3_REGION: gra
+      PGBACKREST_REPO1_S3_BUCKET: vvaves-prod-backups
+      PGBACKREST_REPO1_S3_KEY: ${S3_ACCESS_KEY}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${S3_SECRET_KEY}
+      RESTORE_DIR: /restore/pgdata
+      POSTGRES_USER: vvaves
+      POSTGRES_DB: vvaves
+      SKALPAI_ENDPOINT: https://api.skalpai.dev
+      SKALPAI_API_KEY: ${SKALPAI_API_KEY}
+      SKALPAI_SPACE: vvaves-production
+
+  nats-restore-check:
+    image: nats:2.12-alpine
+    schedule: "50 6 * * *"
+    volumes: ["restore-scratch:/restore"]
+    resources:
+      cpu: "500m"
+      memory: 512M
+    env:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: gra
+      S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
+      S3_BUCKET: vvaves-prod-backups
+      S3_PREFIX: "nats/"
+      SKALPAI_ENDPOINT: https://api.skalpai.dev
+      SKALPAI_API_KEY: ${SKALPAI_API_KEY}
+      SKALPAI_SPACE: vvaves-production
+    command:
+      - sh
+      - -c
+      - |
+        set -u
+        apk add --no-cache aws-cli jq curl >/dev/null
+        started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        status=failed; label=""; streams=0; detail=""
+        report() {
+          body=$(jq -n --arg space "$SKALPAI_SPACE" --arg status "$status" \
+            --arg started_at "$started" --arg finished_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg backup_label "$label" --argjson tables "$streams" --arg detail "$detail" \
+            '{space:$space,stanza:"nats",kind:"nats-restore",status:$status,started_at:$started_at,finished_at:$finished_at,backup_label:$backup_label,tables:$tables,detail:$detail}')
+          curl -fsS -X POST "$SKALPAI_ENDPOINT/api/v1/backup-checks" \
+            -H "Authorization: Bearer $SKALPAI_API_KEY" -H "Content-Type: application/json" \
+            -d "$body" >/dev/null || echo "[nats-restore-check] report failed"
+          echo "[nats-restore-check] status=$status backup=$label streams=$streams $detail"
+          [ "$status" = ok ]
+        }
+        label=$(aws --endpoint-url "$S3_ENDPOINT" s3 ls "s3://$S3_BUCKET/$S3_PREFIX" | awk '{print $4}' | grep '^nats-.*\.tar\.gz$' | sort | tail -n1)
+        if [ -z "$label" ]; then detail="no nats archive under s3://$S3_BUCKET/$S3_PREFIX"; report; exit; fi
+        rm -rf /restore/nats && mkdir -p /restore/nats
+        if ! aws --endpoint-url "$S3_ENDPOINT" s3 cp "s3://$S3_BUCKET/$S3_PREFIX$label" "/restore/$label" >/dev/null \
+          || ! tar xzf "/restore/$label" -C /restore/nats; then
+          detail="download or extract failed"; rm -f "/restore/$label"; report; exit
+        fi
+        rm -f "/restore/$label"
+        nats-server -js -sd /restore/nats -p 14222 -m 18222 >/restore/nats-server.log 2>&1 &
+        pid=$!
+        i=0
+        until wget -qO- "http://127.0.0.1:18222/healthz?js-enabled-only=true" >/dev/null 2>&1; do
+          i=$((i+1)); if [ $i -gt 120 ]; then break; fi; sleep 1
+        done
+        jsz=$(wget -qO- "http://127.0.0.1:18222/jsz" 2>/dev/null || echo "{}")
+        kill $pid 2>/dev/null
+        streams=$(echo "$jsz" | jq '.streams // 0')
+        messages=$(echo "$jsz" | jq '.messages // 0')
+        detail="$messages message(s)"
+        if [ "$streams" -gt 0 ]; then status=ok; else detail="restored no stream; $detail"; fi
+        report
+
+spaces:
+  vvaves-restore: {}

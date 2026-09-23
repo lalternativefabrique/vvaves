@@ -5,3 +5,5 @@ node: sklet-prod-v2
 deployments:
   - space: vvaves-production
     path: .sklp/vvaves/deploy.yaml
+  - space: vvaves-restore
+    path: .sklp/vvaves/restore.yaml
