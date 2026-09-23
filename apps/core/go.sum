@@ -89,6 +89,8 @@ github.com/lalternative/packages/go/svcauth v0.5.0 h1:dOc8d4QCiA0ZRXQpUYtIzD/Pvt
 github.com/lalternative/packages/go/svcauth v0.5.0/go.mod h1:I3AFiK7snrcH8KgUOEI3l/1RZ3leJtM6BF3mP11wqsY=
 github.com/lalternative/packages/go/tts v0.6.0 h1:iT3VQw0jghf9dJanyf1vrXmZYKY2tTClPNPqpGEe7g0=
 github.com/lalternative/packages/go/tts v0.6.0/go.mod h1:75KtxuFNBMQfVXAcg1cMllRMG/7iwfSSnjmCblFTYVA=
+github.com/lalternative/packages/go/websession v0.1.0 h1:JC6MeF10dUmxmUYUDcTM4aeLXpe0Y29SLSPfgvn2PeY=
+github.com/lalternative/packages/go/websession v0.1.0/go.mod h1:A1FPQCGDJGlvAyTjD7c9JeLckevMBISzZZR66+i84W4=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.6 h1:8yTIVnZgCoiM1TgqoeTl+LfU5Jg6/xL3QhGQnimLYnA=

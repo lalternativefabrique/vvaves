@@ -59,13 +59,6 @@ function AdminShell() {
           >
             Applications
           </Link>
-          <Link
-            to="/admin/users"
-            className={linkClass}
-            activeProps={{ className: activeClass }}
-          >
-            Utilisateurs
-          </Link>
         </>
       }
       app={{ name: 'Vvaves', tone: 'blue' }}

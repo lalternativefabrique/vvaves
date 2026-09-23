@@ -31,6 +31,7 @@ import (
 	"github.com/lalternative/packages/go/eda/pkg/natsbus"
 	"github.com/lalternative/packages/go/svcauth"
 	"github.com/lalternative/packages/go/tts"
+	"github.com/lalternative/packages/go/websession"
 
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
@@ -67,7 +68,7 @@ func main() {
 	}
 
 	mux := httpapi.New(deps)
-	webAuth := middleware.RequireAuth(cfg.JWTSecret)
+	webAuth := middleware.RequireAuth(buildWebSession(cfg))
 	if apps != nil {
 		apps.RegisterRoutes(mux, "/api/v1", webAuth)
 	}
@@ -264,4 +265,20 @@ func buildVoice(cfg config.Config) tts.Voice {
 		MaxChars:    cfg.TTSMaxChars,
 		Concurrency: cfg.TTSConcurrency,
 	})
+}
+
+// buildWebSession names the person behind the admin API from the token
+// urbangate issued them (urbangate ADR 0009). Nil without an issuer, and the
+// admin API then answers nobody.
+func buildWebSession(cfg config.Config) *websession.Guard {
+	if cfg.OIDCIssuerURL == "" {
+		log.Print("vvaves: no OIDC_ISSUER_URL, the admin API is closed")
+		return nil
+	}
+	g, err := websession.New(websession.Config{Product: cfg.OIDCAudience, Urbangate: cfg.OIDCIssuerURL})
+	if err != nil {
+		log.Fatalf("vvaves: admin API issuer: %v", err)
+	}
+	log.Printf("vvaves: admin API tokens from %s for audience %q", cfg.OIDCIssuerURL, cfg.OIDCAudience)
+	return g
 }

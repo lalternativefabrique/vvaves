@@ -194,16 +194,19 @@ key and keeps the old one working for a day; revoking ends both at once. The
 speak guard reads the registry at request time, so none of it needs a
 restart.
 
-The team signs in through the suite's identity provider, urbangate
-(`URBANGATE_ISSUER_URL`, `URBANGATE_CLIENT_ID`, `URBANGATE_CLIENT_SECRET`): a
-person whose roles claim carries `vvaves:admin` is admin here, nobody else is,
-and there is no first-admin setup any more. The registry lives in Postgres beside the admin's own accounts
-(`DATABASE_URL`), the keys sealed with `REGISTRY_ENCRYPTION_KEY` the way the
-platform's other credentials are; the list shows their last four characters.
-Without one, vvaves runs as before on `SPEAK_KEYS`; with one, those pairs
-still count for the issuers the registry does not name. The admin API (`/api/v1/admin/apps`) sits behind the JWT the web app
-mints from its Better Auth session with `JWT_SECRET`; the browser only ever
-reaches it through the web app's own proxy.
+People sign in and sign up on vvaves' own screens, and the suite's identity
+provider, urbangate, holds them (its ADR 0009): the web drives Kratos'
+native flows with `URBANGATE_ISSUER_URL`, exchanges the session for the
+person's token with `URBANGATE_PROVISIONER_CLIENT_SECRET` and
+`URBANGATE_CLIENT_SECRET`, and a person whose roles carry `vvaves:admin` is
+admin here, nobody else is. The registry lives in Postgres (`DATABASE_URL`),
+the keys sealed with `REGISTRY_ENCRYPTION_KEY` the way the platform's other
+credentials are; the list shows their last four characters. Without one,
+vvaves runs as before on `SPEAK_KEYS`; with one, those pairs still count for
+the issuers the registry does not name. The admin API (`/api/v1/admin/apps`)
+sits behind the token urbangate issued the person (`OIDC_ISSUER_URL`,
+`OIDC_AUDIENCE`); the browser only ever reaches it through the web app's own
+proxy.
 
 ## The contract
 
