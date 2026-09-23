@@ -287,4 +287,5 @@ spaces:
         - service: web
           host: vvaves.dev
           path: /
+          kind: web
           security_headers: true
