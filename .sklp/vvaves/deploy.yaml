@@ -244,48 +244,16 @@ spaces:
           kind: expensive
           security_headers: true
           timeout: "0"
-        - service: app
-          host: vvaves.dev
-          path: /search
-          kind: expensive
-          rate: 20
-          burst: 40
-          security_headers: true
-          timeout: 30s
-        - service: app
-          host: vvaves.dev
-          path: /fetch
-          kind: expensive
-          rate: 20
-          burst: 40
-          security_headers: true
-          timeout: 60s
-        - service: app
-          host: vvaves.dev
-          path: /map
-          kind: expensive
-          rate: 5
-          burst: 10
-          security_headers: true
-          timeout: 60s
-        - service: app
-          host: vvaves.dev
-          path: /crawl
-          kind: expensive
-          rate: 10
-          burst: 20
-          security_headers: true
-          timeout: 30s
-        - service: app
-          host: vvaves.dev
-          path: /render
-          kind: expensive
-          rate: 10
-          burst: 20
-          security_headers: true
-          timeout: 60s
         - service: web
           host: vvaves.dev
           path: /
           kind: web
+          security_headers: true
+        - service: app
+          host: vvaves.dev
+          path: /openapi.json
+          security_headers: true
+        - service: app
+          host: vvaves.dev
+          path: /healthz
           security_headers: true
