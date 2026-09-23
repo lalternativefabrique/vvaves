@@ -7,6 +7,179 @@
         "version": "0.3.0"
     },
     "paths": {
+        "/api/keys": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "List the caller's keys for this product",
+                "operationId": "listKeys",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.KeyListDTO"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The key is signed by urbangate and returned once; it is stored nowhere.",
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Issue a key the caller's application will present to this product",
+                "operationId": "createKey",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/keys.CreateKeyRequest"
+                            }
+                        }
+                    },
+                    "description": "Label, and optionally the scopes",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.CreatedKeyDTO"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/keys/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Recorded before the key is dropped: a 503 left the key working, and retrying is safe.",
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Revoke one of the caller's keys",
+                "operationId": "revokeKey",
+                "parameters": [
+                    {
+                        "description": "The key's id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/keys.ErrorDTO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/apps": {
             "get": {
                 "security": [
@@ -515,6 +688,100 @@
                     },
                     "text": {
                         "type": "string"
+                    }
+                }
+            },
+            "keys.CreateKeyRequest": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "keys.CreatedKeyDTO": {
+                "type": "object",
+                "properties": {
+                    "audience": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "secret": {
+                        "type": "string"
+                    }
+                }
+            },
+            "keys.ErrorDTO": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "keys.KeyDTO": {
+                "type": "object",
+                "properties": {
+                    "audience": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "scopes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "keys.KeyListDTO": {
+                "type": "object",
+                "properties": {
+                    "keys": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/keys.KeyDTO"
+                        }
                     }
                 }
             },

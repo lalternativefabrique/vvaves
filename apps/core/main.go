@@ -35,6 +35,7 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
+	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
 	"github.com/lalternativefabrique/vvaves/core/registry"
@@ -51,13 +52,14 @@ func main() {
 
 	apps, keys := buildRegistry(cfg)
 
+	customerKeys := buildCustomerKeys(cfg)
 	deps := httpapi.Deps{
 		Reader:       reader,
 		Primer:       primer,
 		Verifier:     signed.NewLookupVerifier(keys.Keys),
 		AppKeyIssuer: keys.IssuerOf,
 		Tokens:       buildTokens(cfg),
-		CustomerKeys: buildCustomerKeys(cfg),
+		CustomerKeys: customerKeyVerifier(customerKeys),
 		Unguarded:    cfg.SpeakUnguarded,
 	}
 	if cfg.SpeakUnguarded {
@@ -65,9 +67,11 @@ func main() {
 	}
 
 	mux := httpapi.New(deps)
+	webAuth := middleware.RequireAuth(cfg.JWTSecret)
 	if apps != nil {
-		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAuth(cfg.JWTSecret))
+		apps.RegisterRoutes(mux, "/api/v1", webAuth)
 	}
+	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", webAuth)
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: mux}
 
@@ -113,8 +117,8 @@ const revocationRetry = 30 * time.Second
 // buildCustomerKeys wires the keys urbangate issues to this product's
 // customers: verified offline against urbangate's own key set, refused when
 // the revocation list says so. Nil when no provisioner credential is
-// configured, and the interface stays nil rather than holding a typed nil.
-func buildCustomerKeys(cfg config.Config) httpapi.CustomerKeyVerifier {
+// configured, and the guard then accepts no customer key.
+func buildCustomerKeys(cfg config.Config) *appkeys.Keys {
 	if cfg.ProvisionerClientSecret == "" {
 		log.Print("vvaves: no URBANGATE_PROVISIONER_CLIENT_SECRET, customer keys are not accepted")
 		return nil
@@ -132,9 +136,8 @@ func buildCustomerKeys(cfg config.Config) httpapi.CustomerKeyVerifier {
 			[]string{"urbangate"},
 			[]string{"urbangate:keys:issue"},
 		),
-		// The relay lives in the web app, which holds the session; this
-		// process only guards.
-		OwnerOf: func(*http.Request) (string, bool) { return "", false },
+		DefaultScopes: []string{httpapi.ScopeSpeak},
+		OwnerOf:       ownerOfSession,
 	})
 	if err != nil {
 		log.Fatalf("vvaves: customer keys: %v", err)
@@ -155,6 +158,39 @@ func buildCustomerKeys(cfg config.Config) httpapi.CustomerKeyVerifier {
 	}()
 	log.Printf("vvaves: customer keys verified against %s", cfg.OIDCIssuerURL)
 	return keys
+}
+
+// ownerOfSession names the person a key is issued against: the provider
+// identity the web put in its token, never the local user id.
+func ownerOfSession(r *http.Request) (string, bool) {
+	u, ok := middleware.GetUser(r.Context())
+	if !ok || u.IdentityID == "" {
+		return "", false
+	}
+	return u.IdentityID, true
+}
+
+// customerKeyVerifier keeps the guard's nil check honest: a nil *Keys must
+// not become a non-nil interface holding it.
+func customerKeyVerifier(keys *appkeys.Keys) httpapi.CustomerKeyVerifier {
+	if keys == nil {
+		return nil
+	}
+	return keys
+}
+
+// keyRelay serves the key page's three calls from here, with the provisioner
+// credential that never leaves this process. Without one, the page is told
+// so rather than left waiting.
+func keyRelay(keys *appkeys.Keys) http.Handler {
+	if keys == nil {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"error":"no_credential"}`))
+		})
+	}
+	return keys.Relay()
 }
 
 func buildRegistry(cfg config.Config) (*registry.Service, *registry.KeySource) {

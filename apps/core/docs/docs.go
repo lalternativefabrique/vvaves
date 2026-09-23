@@ -15,6 +15,149 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/keys": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "List the caller's keys for this product",
+                "operationId": "listKeys",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/keys.KeyListDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The key is signed by urbangate and returned once; it is stored nowhere.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Issue a key the caller's application will present to this product",
+                "operationId": "createKey",
+                "parameters": [
+                    {
+                        "description": "Label, and optionally the scopes",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/keys.CreateKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/keys.CreatedKeyDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/keys/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Recorded before the key is dropped: a 503 left the key working, and retrying is safe.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "keys"
+                ],
+                "summary": "Revoke one of the caller's keys",
+                "operationId": "revokeKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The key's id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/keys.ErrorDTO"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/apps": {
             "get": {
                 "security": [
@@ -449,6 +592,100 @@ const docTemplate = `{
                 },
                 "text": {
                     "type": "string"
+                }
+            }
+        },
+        "keys.CreateKeyRequest": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "keys.CreatedKeyDTO": {
+            "type": "object",
+            "properties": {
+                "audience": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "secret": {
+                    "type": "string"
+                }
+            }
+        },
+        "keys.ErrorDTO": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "keys.KeyDTO": {
+            "type": "object",
+            "properties": {
+                "audience": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "keys.KeyListDTO": {
+            "type": "object",
+            "properties": {
+                "keys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/keys.KeyDTO"
+                    }
                 }
             }
         },
