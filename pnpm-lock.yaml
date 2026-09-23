@@ -15,8 +15,8 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/auth':
-        specifier: ^1.0.2
-        version: 1.0.2(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: ^1.0.3
+        version: 1.0.3(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/keys':
         specifier: 0.3.0
         version: 0.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -360,8 +360,8 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@lalternative/auth@1.0.2':
-    resolution: {integrity: sha512-Lm8CN7rkr4xqHGj/pLlGj3JXVy8v+b/l3kqQbcu5nCkb4QeBE8kpMWS2VIEMbV0tf2YPCERemtnbhjq4DSKlgg==}
+  '@lalternative/auth@1.0.3':
+    resolution: {integrity: sha512-OpjGf8HuUR6B5LyJgj04Lp2gCeNONrVVLv+j6zhOIIs5PSD9vrZtC0KCP0N0OKLjxEDEhSey0M21DGe2lpbEVg==}
     peerDependencies:
       better-auth: '>=1.7.0'
       react: '>=18.0.0'
@@ -2734,7 +2734,7 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@lalternative/auth@1.0.2(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@lalternative/auth@1.0.3(better-auth@1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       better-auth: 1.7.3(@tanstack/react-start@1.168.50(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.8)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.11(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)))
       react: 19.2.8

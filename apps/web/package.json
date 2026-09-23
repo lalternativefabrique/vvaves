@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@lalternative/admin": "^0.10.0",
-    "@lalternative/auth": "^1.0.2",
+    "@lalternative/auth": "^1.0.3",
     "@lalternative/keys": "0.3.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.10.12",

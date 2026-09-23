@@ -16,6 +16,7 @@ function build() {
     process.env.URBANGATE_ISSUER_URL ?? 'https://id.urbangate.dev'
   return createUrbangateAuth({
     product: 'vvaves',
+    productName: 'vvaves',
     kratosUrl: process.env.KRATOS_PUBLIC_URL ?? issuerUrl,
     urbangate: {
       issuerUrl,
