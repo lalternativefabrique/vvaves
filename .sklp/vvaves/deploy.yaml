@@ -19,7 +19,6 @@ services:
     env:
       LISTEN_ADDR: ":8080"
       DATABASE_URL: postgres://vvaves:${POSTGRES_PASSWORD}@postgres:5432/vvaves?sslmode=disable
-      JWT_SECRET: ${JWT_SECRET}
       REGISTRY_ENCRYPTION_KEY: ${REGISTRY_ENCRYPTION_KEY}
       OIDC_ISSUER_URL: https://id.urbangate.dev
       OIDC_AUDIENCE: vvaves
@@ -51,10 +50,7 @@ services:
     env:
       PORT: "5273"
       NODE_ENV: production
-      DATABASE_URL: postgres://vvaves:${POSTGRES_PASSWORD}@postgres:5432/vvaves?sslmode=disable
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: https://vvaves.dev
-      JWT_SECRET: ${JWT_SECRET}
       CORE_API_URL: http://app:8080
       URBANGATE_ISSUER_URL: https://id.urbangate.dev
       URBANGATE_CLIENT_ID: vvaves-admin

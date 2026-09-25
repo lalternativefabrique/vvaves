@@ -1,56 +1,47 @@
-import {
-  createPlatformAuth,
-  kratosPasswordsFromEnv,
-  ssoFromEnv,
-} from '@lalternative/auth/server'
-import { tanstackStartCookies } from 'better-auth/tanstack-start'
-import { pool } from './db'
+import { createUrbangateAuth } from '@lalternative/auth/urbangate'
 
-// The Go core does not sign tokens; it verifies the JWT minted from this
-// session (apps/core/middleware/jwt.go), so BETTER_AUTH_SECRET and the core's
-// JWT_SECRET must match.
-const authSecret = process.env.BETTER_AUTH_SECRET
-if (!authSecret) {
-  throw new Error('BETTER_AUTH_SECRET environment variable is required')
-}
-
-export const SSO_PROVIDER_ID = 'urbangate'
-
-function ssoEnv() {
-  return {
-    URBANGATE_ISSUER_URL: process.env.URBANGATE_ISSUER_URL,
-    URBANGATE_CLIENT_ID: process.env.URBANGATE_CLIENT_ID,
-    URBANGATE_CLIENT_SECRET: process.env.URBANGATE_CLIENT_SECRET,
+/**
+ * Nobody has an account here: a person signs up and signs in on vvaves's
+ * screens, Kratos holds the identity, and the core trusts the token
+ * urbangate issues for them (urbangate ADR 0009). Built on first use, so the
+ * public landing page needs no secret.
+ */
+function build() {
+  const required = (name: string) => {
+    const value = process.env[name]
+    if (!value) throw new Error(`${name} environment variable is required`)
+    return value
   }
+  const issuerUrl =
+    process.env.URBANGATE_ISSUER_URL ?? 'https://id.urbangate.dev'
+  return createUrbangateAuth({
+    product: 'vvaves',
+    productName: 'vvaves',
+    kratosUrl: process.env.KRATOS_PUBLIC_URL ?? issuerUrl,
+    urbangate: {
+      issuerUrl,
+      provisioner: {
+        clientId:
+          process.env.URBANGATE_PROVISIONER_CLIENT_ID ?? 'vvaves-provisioner',
+        clientSecret: required('URBANGATE_PROVISIONER_CLIENT_SECRET'),
+      },
+      admin: {
+        clientId: process.env.URBANGATE_CLIENT_ID ?? 'vvaves-admin',
+        clientSecret: required('URBANGATE_CLIENT_SECRET'),
+      },
+    },
+  })
 }
 
-export function ssoEnabled(): boolean {
-  return ssoFromEnv('vvaves', ssoEnv()) !== undefined
+type Auth = ReturnType<typeof build>
+
+let built: Auth | undefined
+
+export function getAuth(): Auth {
+  built ??= build()
+  return built
 }
 
-export const auth = createPlatformAuth({
-  database: pool,
-  baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:5273',
-  secret: authSecret,
-  appName: 'vvaves',
-  betaMode: true,
-  isInvited: async () => false,
-  google: process.env.GOOGLE_CLIENT_ID
-    ? {
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      }
-    : undefined,
-  sso: ssoFromEnv('vvaves', ssoEnv()),
-  kratosPasswords: kratosPasswordsFromEnv('vvaves', {
-    URBANGATE_ISSUER_URL: process.env.URBANGATE_ISSUER_URL,
-    URBANGATE_PUBLIC_URL: process.env.URBANGATE_PUBLIC_URL,
-    URBANGATE_PROVISIONER_CLIENT_ID:
-      process.env.URBANGATE_PROVISIONER_CLIENT_ID,
-    URBANGATE_PROVISIONER_CLIENT_SECRET:
-      process.env.URBANGATE_PROVISIONER_CLIENT_SECRET,
-  }),
-  plugins: [tanstackStartCookies()],
+export const auth: Auth = new Proxy({} as Auth, {
+  get: (_, prop: string | symbol) => Reflect.get(getAuth(), prop) as unknown,
 })
-
-export type Auth = typeof auth
