@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.110.0
 	github.com/jackc/pgx/v5 v5.11.0
-	github.com/lalternative/packages/go/appkeys v0.1.1
+	github.com/lalternative/packages/go/appkeys v0.2.1
 	github.com/lalternative/packages/go/audioreader v0.2.1
 	github.com/lalternative/packages/go/eda v0.8.0
 	github.com/lalternative/packages/go/svcauth v0.6.0
