@@ -7,7 +7,7 @@ const refusal = (status: number): Guarded => ({
 })
 
 describe('guardOutcome', () => {
-  it('lets a session in with its address', () => {
+  it('lets a session in with its address and name', () => {
     const guarded: Guarded = {
       session: {
         user: {
@@ -25,6 +25,7 @@ describe('guardOutcome', () => {
     expect(guardOutcome(guarded)).toEqual({
       status: 'allowed',
       email: 'ada@example.com',
+      name: 'Ada',
     })
   })
 

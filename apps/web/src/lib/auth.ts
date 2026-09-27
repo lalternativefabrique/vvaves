@@ -1,4 +1,5 @@
 import { createUrbangateAuth } from '@lalternative/auth/urbangate'
+import { revokeEveryKey } from './account-deletion'
 import { appUrl } from './app-url'
 
 /**
@@ -15,10 +16,14 @@ function build() {
   }
   const issuerUrl =
     process.env.URBANGATE_ISSUER_URL ?? 'https://id.urbangate.dev'
+  const coreUrl = process.env.CORE_API_URL ?? 'http://localhost:8080'
   return createUrbangateAuth({
     product: 'vvaves',
     kratosUrl: process.env.KRATOS_PUBLIC_URL ?? issuerUrl,
-    coreUrl: process.env.CORE_API_URL ?? 'http://localhost:8080',
+    coreUrl,
+    accountDeletion: ({ accessToken }) => ({
+      deleteData: () => revokeEveryKey(coreUrl, accessToken),
+    }),
     urbangate: {
       issuerUrl,
       provisioner: {

@@ -1,7 +1,7 @@
 import type { Guarded } from '@lalternative/auth/urbangate'
 
 export type GuardOutcome =
-  { status: 'allowed'; email: string } | { status: 'refused' }
+  { status: 'allowed'; email: string; name: string } | { status: 'refused' }
 
 export class IdentityProviderUnavailableError extends Error {
   constructor(status: number) {
@@ -11,8 +11,10 @@ export class IdentityProviderUnavailableError extends Error {
 }
 
 export function guardOutcome(guarded: Guarded): GuardOutcome {
-  if ('session' in guarded)
-    return { status: 'allowed', email: guarded.session.user.email }
+  if ('session' in guarded) {
+    const { email, name } = guarded.session.user
+    return { status: 'allowed', email, name }
+  }
   const { status } = guarded.response
   if (status === 401 || status === 403) return { status: 'refused' }
   throw new IdentityProviderUnavailableError(status)

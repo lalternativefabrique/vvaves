@@ -1,4 +1,5 @@
 import {
+  Link,
   Outlet,
   createFileRoute,
   redirect,
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/app')({
   beforeLoad: async () => {
     const outcome = await requireSessionFn()
     if (outcome.status === 'refused') throw redirect({ to: '/login' })
-    return { email: outcome.email }
+    return { email: outcome.email, name: outcome.name }
   },
   component: AppShell,
 })
@@ -33,6 +34,22 @@ function AppShell() {
             <span aria-hidden className="size-2 rounded-full bg-emerald-500" />
             vvaves
           </span>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link
+              to="/app/keys"
+              className="text-muted-foreground hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Clés
+            </Link>
+            <Link
+              to="/app/settings"
+              className="text-muted-foreground hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Paramètres
+            </Link>
+          </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="hidden text-muted-foreground sm:inline">
               {email}
