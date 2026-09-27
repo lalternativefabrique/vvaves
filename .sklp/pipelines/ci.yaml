@@ -47,7 +47,7 @@ steps:
   - name: contract-current
     scope: [facade]
     tools: [go, node]
-    workdir: apps/core
+    cwd: apps/core
     run: |
       set -euo pipefail
       go run github.com/swaggo/swag/cmd/swag@v1.16.6 init --parseDependency --parseInternal -q --dir "./"
@@ -60,7 +60,7 @@ steps:
 
   - name: migrate-check
     scope: [migrate]
-    workdir: apps/migrations
+    cwd: apps/migrations
     run: |
       for up in *.up.sql; do
         test -f "${up%.up.sql}.down.sql" || { echo "missing down for $up"; exit 1; }
