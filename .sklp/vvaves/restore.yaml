@@ -9,7 +9,7 @@ registries:
 
 jobs:
   drill-postgres:
-    image: rg.fr-par.scw.cloud/platform-ops/restore-drill-pg16:20260927-0416-94f470a035ef
+    image: rg.fr-par.scw.cloud/platform-ops/restore-drill-pg16:20260927-0459-2c6c7e5f13e4
     schedule: "20 5 * * *"
     volumes: ["drill-postgres:/scratch"]
     resources:
@@ -29,7 +29,7 @@ jobs:
       SKALPAI_API_KEY: ${SKALPAI_API_KEY}
 
   drill-nats:
-    image: rg.fr-par.scw.cloud/platform-ops/restore-drill-nats:20260927-0416-94f470a035ef
+    image: rg.fr-par.scw.cloud/platform-ops/restore-drill-nats:20260927-0459-2c6c7e5f13e4
     schedule: "30 5 * * *"
     volumes: ["drill-nats:/scratch"]
     resources:
