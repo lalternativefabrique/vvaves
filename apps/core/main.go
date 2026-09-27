@@ -31,6 +31,7 @@ import (
 	"github.com/lalternative/packages/go/eda/pkg/natsbus"
 	"github.com/lalternative/packages/go/svcauth"
 	"github.com/lalternative/packages/go/tts"
+	"github.com/lalternative/packages/go/websession"
 
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
@@ -67,11 +68,11 @@ func main() {
 	}
 
 	mux := httpapi.New(deps)
-	webAuth := middleware.RequireAuth(cfg.JWTSecret)
+	webSession := buildWebSession(cfg)
 	if apps != nil {
-		apps.RegisterRoutes(mux, "/api/v1", webAuth)
+		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAdmin(webSession))
 	}
-	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", webAuth)
+	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession))
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: mux}
 
@@ -160,8 +161,27 @@ func buildCustomerKeys(cfg config.Config) *appkeys.Keys {
 	return keys
 }
 
-// ownerOfSession names the person a key is issued against: the provider
-// identity the web put in its token, never the local user id.
+// buildWebSession names the person behind the admin API and the key routes
+// from the access token urbangate issued them for vvaves. Nil without an
+// issuer, and both then answer nobody.
+func buildWebSession(cfg config.Config) *websession.Guard {
+	if cfg.OIDCIssuerURL == "" {
+		log.Print("vvaves: no OIDC_ISSUER_URL, the admin API and the key routes are closed")
+		return nil
+	}
+	g, err := websession.New(websession.Config{
+		Product:   cfg.OIDCAudience,
+		Urbangate: cfg.OIDCIssuerURL,
+	})
+	if err != nil {
+		log.Fatalf("vvaves: admin API issuer: %v", err)
+	}
+	log.Printf("vvaves: admin API tokens from %s", cfg.OIDCIssuerURL)
+	return g
+}
+
+// ownerOfSession names the person a key is issued against: their identity at
+// urbangate.
 func ownerOfSession(r *http.Request) (string, bool) {
 	u, ok := middleware.GetUser(r.Context())
 	if !ok || u.IdentityID == "" {

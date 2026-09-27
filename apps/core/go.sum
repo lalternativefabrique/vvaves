@@ -85,10 +85,12 @@ github.com/lalternative/packages/go/audioreader v0.2.1 h1:J7kjvRjcer0o27hQl97Ths
 github.com/lalternative/packages/go/audioreader v0.2.1/go.mod h1:h/WIzfZgpNH9/6MX/usw1Z9IDXJneZBdNB8064ITeNg=
 github.com/lalternative/packages/go/eda v0.8.0 h1:+VXQ5ogbzwcV1yiXxBIMsLi0PzPU2fWFjFoxMxS/GeY=
 github.com/lalternative/packages/go/eda v0.8.0/go.mod h1:rEJZsWrl6SwIEPSAk+2wGzxL10N4Z+NNx6SHVKSUkE0=
-github.com/lalternative/packages/go/svcauth v0.5.0 h1:dOc8d4QCiA0ZRXQpUYtIzD/PvtjROfVX9sXty9f+BLY=
-github.com/lalternative/packages/go/svcauth v0.5.0/go.mod h1:I3AFiK7snrcH8KgUOEI3l/1RZ3leJtM6BF3mP11wqsY=
+github.com/lalternative/packages/go/svcauth v0.6.0 h1:5jWnmzTt/tHsBCKTr9qG29GOGDlFUhkUPHnHYTlNPZk=
+github.com/lalternative/packages/go/svcauth v0.6.0/go.mod h1:I3AFiK7snrcH8KgUOEI3l/1RZ3leJtM6BF3mP11wqsY=
 github.com/lalternative/packages/go/tts v0.6.0 h1:iT3VQw0jghf9dJanyf1vrXmZYKY2tTClPNPqpGEe7g0=
 github.com/lalternative/packages/go/tts v0.6.0/go.mod h1:75KtxuFNBMQfVXAcg1cMllRMG/7iwfSSnjmCblFTYVA=
+github.com/lalternative/packages/go/websession v0.2.0 h1:h/R4X40zOzK+jQtMlKyvwBrxgxarak1RTX4tc7F7oM4=
+github.com/lalternative/packages/go/websession v0.2.0/go.mod h1:PH0a3YEZTRPeMCofc/rkxpnbLSOheZnWoP+7ZagdkCQ=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.6 h1:8yTIVnZgCoiM1TgqoeTl+LfU5Jg6/xL3QhGQnimLYnA=

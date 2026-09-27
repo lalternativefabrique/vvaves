@@ -76,6 +76,9 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 }
 func (d Deps) guardServiceToken(ctx context.Context, raw string) error {
 	claims, err := d.Tokens.Verify(ctx, raw)
+	if errors.Is(err, svcauth.ErrUnavailable) {
+		return ErrIdentityProviderUnavailable
+	}
 	if err != nil {
 		return ErrBadToken
 	}
@@ -97,6 +100,8 @@ func (d Deps) guardCustomerKey(ctx context.Context, raw string) error {
 	switch {
 	case err == nil:
 		return nil
+	case errors.Is(err, svcauth.ErrUnavailable):
+		return ErrIdentityProviderUnavailable
 	case errors.Is(err, appkeys.ErrListStale), errors.Is(err, svcauth.ErrRevocationUnknown):
 		return ErrRevocationUnknown
 	case errors.Is(err, svcauth.ErrKeyRevoked):
@@ -127,6 +132,11 @@ var ErrBadToken = errors.New("speak: bearer token refused")
 // ErrTokenLacksScope is a valid token that was not granted the speak scope.
 var ErrTokenLacksScope = errors.New("speak: token lacks the " + ScopeSpeak + " scope")
 
+// ErrIdentityProviderUnavailable is a credential that could not be checked
+// because urbangate's keys could not be read: the caller retries, it does not
+// rotate a credential that may well be valid.
+var ErrIdentityProviderUnavailable = errors.New("speak: identity provider unavailable")
+
 // ErrKeyRevoked is a customer key whose signature verifies but which the
 // issuer has withdrawn.
 var ErrKeyRevoked = errors.New("speak: key revoked")
@@ -145,6 +155,9 @@ func writeAuthError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, signed.ErrExpired):
 		writeError(w, http.StatusUnauthorized, "signature expired")
+	case errors.Is(err, ErrIdentityProviderUnavailable):
+		w.Header().Set("Retry-After", svcauth.RetryAfter)
+		writeError(w, http.StatusServiceUnavailable, "the credential cannot be checked yet, retry")
 	case errors.Is(err, ErrRevocationUnknown):
 		writeError(w, http.StatusServiceUnavailable, "the key cannot be judged yet, retry")
 	default:

@@ -39,13 +39,10 @@ type Config struct {
 	// cluster wants.
 	Keys map[string][]string
 
-	// DatabaseURL opens the registry of applications and the admin's own
-	// accounts. Empty runs without either: the environment pairs above are
-	// then all that speaks, as before the registry existed.
+	// DatabaseURL opens the registry of applications. Empty runs without it:
+	// the environment pairs above are then all that speaks, as before the
+	// registry existed.
 	DatabaseURL string
-	// JWTSecret verifies the admin web app's tokens on the admin API. It is
-	// the same value the web app mints with.
-	JWTSecret string
 	// OIDCIssuerURL is the suite's identity provider, read from
 	// OIDC_ISSUER_URL. A service presents a bearer token it obtained there
 	// instead of an app key; the token must name OIDCAudience. Empty accepts
@@ -103,7 +100,6 @@ func Load() Config {
 		Keys: envPairs("SPEAK_KEYS"),
 
 		DatabaseURL:           os.Getenv("DATABASE_URL"),
-		JWTSecret:             os.Getenv("JWT_SECRET"),
 		RegistryEncryptionKey: os.Getenv("REGISTRY_ENCRYPTION_KEY"),
 		SpeakUnguarded:        os.Getenv("SPEAK_UNGUARDED") == "true",
 		OIDCIssuerURL:         os.Getenv("OIDC_ISSUER_URL"),

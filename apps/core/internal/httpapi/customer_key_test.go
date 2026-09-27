@@ -98,3 +98,24 @@ func TestCustomerKeysAloneCountAsAGuard(t *testing.T) {
 		t.Fatalf("status = %d, want 403", rec.Code)
 	}
 }
+
+// A credential urbangate's keys could not be fetched to check may well be
+// valid: 503 with Retry-After sends the caller retrying, where a 403 would
+// send them rotating it during an outage.
+func TestSpeakCannotJudgeACredentialWhileTheIdentityProviderIsDown(t *testing.T) {
+	d := guardedDeps(t)
+	d.CustomerKeys = &stubCustomerKeys{err: svcauth.ErrUnavailable}
+	d.Tokens = unavailableTokens{}
+	for _, raw := range []string{customerKey, "a-service-token"} {
+		rec := postBearer(t, d, "/speak", raw, speakBody)
+		if rec.Code != http.StatusServiceUnavailable || rec.Header().Get("Retry-After") == "" {
+			t.Fatalf("%s: status = %d, Retry-After = %q, want 503 with Retry-After", raw, rec.Code, rec.Header().Get("Retry-After"))
+		}
+	}
+}
+
+type unavailableTokens struct{}
+
+func (unavailableTokens) Verify(context.Context, string) (svcauth.Claims, error) {
+	return svcauth.Claims{}, svcauth.ErrUnavailable
+}
