@@ -12,19 +12,21 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAppsRouteImport } from './routes/admin/apps'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
-import { Route as ApiMeRouteImport } from './routes/api/me'
 import { Route as AppKeysRouteImport } from './routes/app/keys'
+import { Route as AppSettingsRouteImport } from './routes/app/settings'
+import { Route as LoginCodeRouteImport } from './routes/login_.code'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as ApiAuthSsoRouteImport } from './routes/api/auth/sso'
 import { Route as ApiKeysIndexRouteImport } from './routes/api/keys.index'
 import { Route as ApiKeysIdRouteImport } from './routes/api/keys.$id'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
-import { Route as ApiAdminUsersUserIdRouteImport } from './routes/api/admin/users.$userId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,9 +43,29 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -56,19 +78,9 @@ const AdminAppsRoute = AdminAppsRouteImport.update({
   path: '/apps',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin_/login',
   path: '/admin/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiMeRoute = ApiMeRouteImport.update({
-  id: '/api/me',
-  path: '/api/me',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppKeysRoute = AppKeysRouteImport.update({
@@ -76,14 +88,19 @@ const AppKeysRoute = AppKeysRouteImport.update({
   path: '/keys',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const LoginCodeRoute = LoginCodeRouteImport.update({
+  id: '/login_/code',
+  path: '/login/code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSsoRoute = ApiAuthSsoRouteImport.update({
-  id: '/api/auth/sso',
-  path: '/api/auth/sso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiKeysIndexRoute = ApiKeysIndexRouteImport.update({
@@ -101,65 +118,66 @@ const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
   path: '/api/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminUsersUserIdRoute = ApiAdminUsersUserIdRouteImport.update({
-  id: '/api/admin/users/$userId',
-  path: '/api/admin/users/$userId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/users': typeof AdminUsersRoute
   '/admin/login': typeof AdminLoginRoute
-  '/api/me': typeof ApiMeRoute
   '/app/keys': typeof AppKeysRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/login/code': typeof LoginCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/sso': typeof ApiAuthSsoRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys/': typeof ApiKeysIndexRoute
-  '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/users': typeof AdminUsersRoute
   '/admin/login': typeof AdminLoginRoute
-  '/api/me': typeof ApiMeRoute
   '/app/keys': typeof AppKeysRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/login/code': typeof LoginCodeRoute
   '/admin': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/sso': typeof ApiAuthSsoRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys': typeof ApiKeysIndexRoute
-  '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/users': typeof AdminUsersRoute
   '/admin_/login': typeof AdminLoginRoute
-  '/api/me': typeof ApiMeRoute
   '/app/keys': typeof AppKeysRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/login_/code': typeof LoginCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/sso': typeof ApiAuthSsoRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys/': typeof ApiKeysIndexRoute
-  '/api/admin/users/$userId': typeof ApiAdminUsersUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,69 +185,77 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/app'
+    | '/forgot-password'
     | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/verify-email'
     | '/admin/apps'
-    | '/admin/users'
     | '/admin/login'
-    | '/api/me'
     | '/app/keys'
+    | '/app/settings'
+    | '/login/code'
     | '/admin/'
     | '/api/auth/$'
-    | '/api/auth/sso'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys/'
-    | '/api/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/app'
+    | '/forgot-password'
     | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/verify-email'
     | '/admin/apps'
-    | '/admin/users'
     | '/admin/login'
-    | '/api/me'
     | '/app/keys'
+    | '/app/settings'
+    | '/login/code'
     | '/admin'
     | '/api/auth/$'
-    | '/api/auth/sso'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys'
-    | '/api/admin/users/$userId'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/app'
+    | '/forgot-password'
     | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/verify-email'
     | '/admin/apps'
-    | '/admin/users'
     | '/admin_/login'
-    | '/api/me'
     | '/app/keys'
+    | '/app/settings'
+    | '/login_/code'
     | '/admin/'
     | '/api/auth/$'
-    | '/api/auth/sso'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys/'
-    | '/api/admin/users/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   AdminLoginRoute: typeof AdminLoginRoute
-  ApiMeRoute: typeof ApiMeRoute
+  LoginCodeRoute: typeof LoginCodeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiAuthSsoRoute: typeof ApiAuthSsoRoute
   ApiKeysIdRoute: typeof ApiKeysIdRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
   ApiKeysIndexRoute: typeof ApiKeysIndexRoute
-  ApiAdminUsersUserIdRoute: typeof ApiAdminUsersUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -255,11 +281,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -276,25 +330,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin_/login': {
       id: '/admin_/login'
       path: '/admin/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/me': {
-      id: '/api/me'
-      path: '/api/me'
-      fullPath: '/api/me'
-      preLoaderRoute: typeof ApiMeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/keys': {
@@ -304,18 +344,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppKeysRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/login_/code': {
+      id: '/login_/code'
+      path: '/login/code'
+      fullPath: '/login/code'
+      preLoaderRoute: typeof LoginCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/sso': {
-      id: '/api/auth/sso'
-      path: '/api/auth/sso'
-      fullPath: '/api/auth/sso'
-      preLoaderRoute: typeof ApiAuthSsoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/keys/': {
@@ -339,25 +386,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/admin/users/$userId': {
-      id: '/api/admin/users/$userId'
-      path: '/api/admin/users/$userId'
-      fullPath: '/api/admin/users/$userId'
-      preLoaderRoute: typeof ApiAdminUsersUserIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 interface AdminRouteChildren {
   AdminAppsRoute: typeof AdminAppsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAppsRoute: AdminAppsRoute,
-  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -365,10 +403,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
   AppKeysRoute: typeof AppKeysRoute
+  AppSettingsRoute: typeof AppSettingsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppKeysRoute: AppKeysRoute,
+  AppSettingsRoute: AppSettingsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -377,15 +417,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   AdminLoginRoute: AdminLoginRoute,
-  ApiMeRoute: ApiMeRoute,
+  LoginCodeRoute: LoginCodeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiAuthSsoRoute: ApiAuthSsoRoute,
   ApiKeysIdRoute: ApiKeysIdRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
   ApiKeysIndexRoute: ApiKeysIndexRoute,
-  ApiAdminUsersUserIdRoute: ApiAdminUsersUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

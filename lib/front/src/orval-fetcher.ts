@@ -1,8 +1,7 @@
 /**
- * Custom fetcher for the orval-generated API client.
- * Auth is a same-origin HttpOnly `token` cookie — the web app mints it from the
- * better-auth session (apps/web lib/mint-core-token.ts) and it travels
- * automatically via credentials: "include". No token injection needed here.
+ * Custom fetcher for the orval-generated API client. The session cookie
+ * travels via credentials: "include", and the web app's proxy swaps it for the
+ * person's urbangate token. No token injection needed here.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

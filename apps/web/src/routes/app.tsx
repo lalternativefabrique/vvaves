@@ -1,26 +1,25 @@
-import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router'
 import { authClient } from '@/lib/auth-client'
-import { getProfile } from '@/lib/services/auth'
-import type { UserProfile } from '@/lib/types/auth'
+import { requireSessionFn } from '@/lib/session'
 
-// The guard lives in the component, as in the admin shell: beforeLoad cannot
-// reach /api/me during SSR and is not replayed on hydration.
 export const Route = createFileRoute('/app')({
+  beforeLoad: async () => {
+    const outcome = await requireSessionFn()
+    if (outcome.status === 'refused') throw redirect({ to: '/login' })
+    return { email: outcome.email, name: outcome.name }
+  },
   component: AppShell,
 })
 
 function AppShell() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<UserProfile | null>(null)
-
-  useEffect(() => {
-    getProfile()
-      .then(setUser)
-      .catch(() => void navigate({ to: '/login', replace: true }))
-  }, [navigate])
-
-  if (!user) return null
+  const { email } = Route.useRouteContext()
 
   const signOut = async () => {
     await authClient.signOut()
@@ -35,9 +34,25 @@ function AppShell() {
             <span aria-hidden className="size-2 rounded-full bg-emerald-500" />
             vvaves
           </span>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link
+              to="/app/keys"
+              className="text-muted-foreground hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Clés
+            </Link>
+            <Link
+              to="/app/settings"
+              className="text-muted-foreground hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Paramètres
+            </Link>
+          </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="hidden text-muted-foreground sm:inline">
-              {user.email}
+              {email}
             </span>
             <button
               type="button"
