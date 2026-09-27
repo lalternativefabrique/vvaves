@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { proxyToCore } from '@/lib/core-proxy'
+import { auth } from '@/lib/auth'
 
 const admin = ({ request }: { request: Request }) =>
-  proxyToCore(request, { adminOnly: true })
+  auth.coreProxy({ adminOnly: true })(request)
 
 export const Route = createFileRoute('/api/v1/$')({
   server: {

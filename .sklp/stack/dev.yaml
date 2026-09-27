@@ -73,24 +73,26 @@ services:
       TTS_VOICE: estelle
       SPEAK_UNGUARDED: "true"
       DATABASE_URL: postgres://vvaves:vvaves@postgres:5432/vvaves?sslmode=disable
-      JWT_SECRET: dev-only-jwt-secret
       REGISTRY_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      OIDC_ISSUER_URL: http://localhost:4444
     ready:
       http: /healthz
       timeout: 120s
 
-  # The admin: who may speak through vvaves. Better Auth owns the accounts in
-  # the same Postgres; the app only ever reaches vvaves through its proxy.
+  # The admin and the customer's key page. Nobody has an account here: people
+  # sign in through the suite's identity provider even on a laptop, and the
+  # app only ever reaches vvaves through its proxy.
   web:
     run: pnpm install --frozen-lockfile && pnpm --filter @vvaves/web dev
     port: 5273
     depends_on: [app]
     env:
-      DATABASE_URL: postgres://vvaves:vvaves@postgres:5432/vvaves?sslmode=disable
-      BETTER_AUTH_SECRET: dev-only-better-auth-secret
-      BETTER_AUTH_URL: http://localhost:5273
-      JWT_SECRET: dev-only-jwt-secret
+      APP_URL: http://localhost:5273
       CORE_API_URL: http://app:8080
+      # URBANGATE_CLIENT_SECRET and URBANGATE_PROVISIONER_CLIENT_SECRET come
+      # from .env, the dev clients of urbangate's clients-dev.
+      URBANGATE_ISSUER_URL: http://localhost:4444
+      KRATOS_PUBLIC_URL: http://localhost:4433
       PORT: "5273"
     ready:
       http: /admin/login

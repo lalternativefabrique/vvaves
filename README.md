@@ -194,16 +194,24 @@ key and keeps the old one working for a day; revoking ends both at once. The
 speak guard reads the registry at request time, so none of it needs a
 restart.
 
-The team signs in through the suite's identity provider, urbangate
-(`URBANGATE_ISSUER_URL`, `URBANGATE_CLIENT_ID`, `URBANGATE_CLIENT_SECRET`): a
-person whose roles claim carries `vvaves:admin` is admin here, nobody else is,
-and there is no first-admin setup any more. The registry lives in Postgres beside the admin's own accounts
-(`DATABASE_URL`), the keys sealed with `REGISTRY_ENCRYPTION_KEY` the way the
-platform's other credentials are; the list shows their last four characters.
-Without one, vvaves runs as before on `SPEAK_KEYS`; with one, those pairs
-still count for the issuers the registry does not name. The admin API (`/api/v1/admin/apps`) sits behind the JWT the web app
-mints from its Better Auth session with `JWT_SECRET`; the browser only ever
-reaches it through the web app's own proxy.
+Nobody has an account here (urbangate ADR 0009). A customer signs up and
+signs in on vvaves's own screens — password or a code by e-mail — which post
+to urbangate's Kratos; the team signs in to `/admin` through urbangate itself
+(`URBANGATE_CLIENT_ID`, `URBANGATE_CLIENT_SECRET`). People and their roles are
+managed in urbangate's console: a person whose roles claim carries
+`vvaves:admin` is admin here, nobody else is.
+
+The web app forwards the access token urbangate issued the person to the
+core, which verifies it against `OIDC_ISSUER_URL` for the audience
+`OIDC_AUDIENCE`. `/api/keys` answers any signed-in person, `/api/v1/admin/apps`
+only an admin, and the core checks the role itself rather than trusting the
+proxy. The browser only ever reaches either through the web app's own proxy.
+
+The registry lives in Postgres (`DATABASE_URL`), the keys sealed with
+`REGISTRY_ENCRYPTION_KEY` the way the platform's other credentials are; the
+list shows their last four characters. Without one, vvaves runs as before on
+`SPEAK_KEYS`; with one, those pairs still count for the issuers the registry
+does not name.
 
 ## The contract
 

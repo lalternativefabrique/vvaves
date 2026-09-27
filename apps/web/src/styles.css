@@ -29,6 +29,31 @@
   --color-ring: hsl(var(--ring));
 }
 
+/* The shared auth screens are written against these names, and they render
+   outside the admin shell, where `.lalt-admin` does not set them. */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 25% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 25% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 25% 12%;
+  --primary: 222 25% 12%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 20% 96%;
+  --secondary-foreground: 222 25% 12%;
+  --muted: 220 20% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 25% 95%;
+  --accent-foreground: 222 25% 12%;
+  --destructive: 0 84% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 16% 91%;
+  --input: 220 14% 88%;
+  --ring: 152 72% 30%;
+  --radius: 0.625rem;
+}
+
 * {
   box-sizing: border-box;
 }
