@@ -26,6 +26,9 @@ services:
       URBANGATE_PROVISIONER_CLIENT_SECRET: ${URBANGATE_PROVISIONER_CLIENT_SECRET}
       SEARXNG_URL: http://searxng:8080
       NATS_URL: nats://nats:4222
+      SUITE_NATS_URL: nats://nats.nats-global.internal:4222
+      SUITE_NATS_USER: vvaves
+      SUITE_NATS_PASSWORD: ${NATS_PASSWORD_VVAVES}
       PIPER_URL: http://tts:5000
       TTS_MODEL: french_24l
       TTS_VOICE: estelle

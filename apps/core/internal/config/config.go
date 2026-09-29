@@ -43,6 +43,11 @@ type Config struct {
 	// the environment pairs above are then all that speaks, as before the
 	// registry existed.
 	DatabaseURL string
+	// The suite's shared bus, where urbangate publishes account deletions
+	// (its ADR 0006); NATS_URL stays this space's own.
+	SuiteNATSURL      string
+	SuiteNATSUser     string
+	SuiteNATSPassword string
 	// OIDCIssuerURL is the suite's identity provider, read from
 	// OIDC_ISSUER_URL. A service presents a bearer token it obtained there
 	// instead of an app key; the token must name OIDCAudience. Empty accepts
@@ -100,6 +105,9 @@ func Load() Config {
 		Keys: envPairs("SPEAK_KEYS"),
 
 		DatabaseURL:           os.Getenv("DATABASE_URL"),
+		SuiteNATSURL:          os.Getenv("SUITE_NATS_URL"),
+		SuiteNATSUser:         os.Getenv("SUITE_NATS_USER"),
+		SuiteNATSPassword:     os.Getenv("SUITE_NATS_PASSWORD"),
 		RegistryEncryptionKey: os.Getenv("REGISTRY_ENCRYPTION_KEY"),
 		SpeakUnguarded:        os.Getenv("SPEAK_UNGUARDED") == "true",
 		OIDCIssuerURL:         os.Getenv("OIDC_ISSUER_URL"),

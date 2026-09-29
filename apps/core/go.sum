@@ -83,8 +83,12 @@ github.com/lalternative/packages/go/appkeys v0.2.1 h1:SGFY55UEvVrNbJ4ZiwcJO4vMPG
 github.com/lalternative/packages/go/appkeys v0.2.1/go.mod h1:b/EAtt2Ntl0d5Cafuun9eUMhKaBUahhyob7gqaTIt2s=
 github.com/lalternative/packages/go/audioreader v0.2.1 h1:J7kjvRjcer0o27hQl97ThsG0H64Q3XAUjt6kg4Ed64E=
 github.com/lalternative/packages/go/audioreader v0.2.1/go.mod h1:h/WIzfZgpNH9/6MX/usw1Z9IDXJneZBdNB8064ITeNg=
-github.com/lalternative/packages/go/eda v0.8.0 h1:+VXQ5ogbzwcV1yiXxBIMsLi0PzPU2fWFjFoxMxS/GeY=
-github.com/lalternative/packages/go/eda v0.8.0/go.mod h1:rEJZsWrl6SwIEPSAk+2wGzxL10N4Z+NNx6SHVKSUkE0=
+github.com/lalternative/packages/go/busevents v0.1.0 h1:3jsi3zSkrzVLLWEiR0aCSQt1eqfcuH9m6y9I9nraBNM=
+github.com/lalternative/packages/go/busevents v0.1.0/go.mod h1:4ndSPTpJGJDoYWjB0HnEIMa4a6XUdgEpUFwRPo0mvLs=
+github.com/lalternative/packages/go/eda v0.9.0 h1:M8PDyK2XPPy0vKoRFZcuVPz3D0lNPbewU9gLoRjRJ6c=
+github.com/lalternative/packages/go/eda v0.9.0/go.mod h1:rEJZsWrl6SwIEPSAk+2wGzxL10N4Z+NNx6SHVKSUkE0=
+github.com/lalternative/packages/go/membership v0.1.0 h1:oqvKRCP3u770dX7VA/CjSdMCQ18aGTxkZ1nVtEpHfRY=
+github.com/lalternative/packages/go/membership v0.1.0/go.mod h1:xCp0/zt4gDCH91k4X7VzJzFRDULG4Pauuq1/pZ6vjqk=
 github.com/lalternative/packages/go/svcauth v0.6.0 h1:5jWnmzTt/tHsBCKTr9qG29GOGDlFUhkUPHnHYTlNPZk=
 github.com/lalternative/packages/go/svcauth v0.6.0/go.mod h1:I3AFiK7snrcH8KgUOEI3l/1RZ3leJtM6BF3mP11wqsY=
 github.com/lalternative/packages/go/tts v0.6.0 h1:iT3VQw0jghf9dJanyf1vrXmZYKY2tTClPNPqpGEe7g0=
