@@ -1,5 +1,5 @@
 import { createUrbangateAuth } from '@lalternative/auth/urbangate'
-import { revokeEveryKey } from './account-deletion'
+import { eraseMembership, revokeEveryKey } from './account-deletion'
 import { appUrl } from './app-url'
 
 /**
@@ -22,7 +22,10 @@ function build() {
     kratosUrl: process.env.KRATOS_PUBLIC_URL ?? issuerUrl,
     coreUrl,
     accountDeletion: ({ accessToken }) => ({
-      deleteData: () => revokeEveryKey(coreUrl, accessToken),
+      deleteData: async () => {
+        await revokeEveryKey(coreUrl, accessToken)
+        await eraseMembership(coreUrl, accessToken)
+      },
     }),
     urbangate: {
       issuerUrl,

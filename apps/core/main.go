@@ -20,18 +20,25 @@ import (
 	"context"
 	"errors"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lalternative/packages/go/appkeys"
 	"github.com/lalternative/packages/go/audioreader"
+	"github.com/lalternative/packages/go/eda/pkg/consumer"
+	edalogger "github.com/lalternative/packages/go/eda/pkg/logger"
 	"github.com/lalternative/packages/go/eda/pkg/natsbus"
+	"github.com/lalternative/packages/go/membership"
+	mpgx "github.com/lalternative/packages/go/membership/pgx"
 	"github.com/lalternative/packages/go/svcauth"
 	"github.com/lalternative/packages/go/tts"
 	"github.com/lalternative/packages/go/websession"
+	"github.com/nats-io/nats.go"
 
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
@@ -51,7 +58,11 @@ func main() {
 
 	reader, primer := buildAudio(cfg)
 
-	apps, keys := buildRegistry(cfg)
+	pool := openPool(cfg)
+	apps, keys := buildRegistry(cfg, pool)
+	members := buildMembership(cfg, pool)
+	lifecycle, stopLifecycle := context.WithCancel(context.Background())
+	defer stopLifecycle()
 
 	customerKeys := buildCustomerKeys(cfg)
 	deps := httpapi.Deps{
@@ -70,9 +81,16 @@ func main() {
 	mux := httpapi.New(deps)
 	webSession := buildWebSession(cfg)
 	if apps != nil {
-		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAdmin(webSession))
+		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAdmin(webSession, members))
 	}
-	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession))
+	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession, members))
+	if members != nil {
+		me := middleware.RequireAuth(webSession, members)(members.MeHandler(identityOfSession))
+		mux.Handle("GET /api/v1/me/membership", me)
+		mux.Handle("DELETE /api/v1/me", me)
+		go members.RunWorker(lifecycle, time.Second)
+		go consumeDeletions(lifecycle, cfg, members)
+	}
 
 	srv := &http.Server{Addr: cfg.Addr, Handler: mux}
 
@@ -213,19 +231,82 @@ func keyRelay(keys *appkeys.Keys) http.Handler {
 	return keys.Relay()
 }
 
-func buildRegistry(cfg config.Config) (*registry.Service, *registry.KeySource) {
+func openPool(cfg config.Config) *pgxpool.Pool {
 	if cfg.DatabaseURL == "" {
+		return nil
+	}
+	pool, err := db.Open(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("vvaves: DATABASE_URL: %v", err)
+	}
+	return pool
+}
+
+// buildMembership keeps who is a member of vvaves (urbangate ADR 0013):
+// opened by the first token, erased on the suite's deletion event. vvaves
+// holds nothing else for a person, their keys live at urbangate.
+func buildMembership(cfg config.Config, pool *pgxpool.Pool) *membership.Service {
+	if pool == nil {
+		log.Print("vvaves: no DATABASE_URL, the membership is off and every token is admitted")
+		return nil
+	}
+	store := mpgx.New(pool)
+	members, err := membership.New(store, membership.Product{
+		Name:      cfg.OIDCAudience,
+		Resources: membership.NewNoop(store),
+	}, membership.Config{
+		Logger: slog.Default(),
+		OnStuck: func(m membership.Member, err error) {
+			slog.Error("member stuck", "identity_id", m.IdentityID, "state", m.State, "attempts", m.Attempts, "error", err)
+		},
+	})
+	if err != nil {
+		log.Fatalf("vvaves: membership: %v", err)
+	}
+	return members
+}
+
+func identityOfSession(r *http.Request) (membership.Identity, bool) {
+	u, ok := middleware.GetUser(r.Context())
+	if !ok || u.IdentityID == "" {
+		return membership.Identity{}, false
+	}
+	return membership.Identity{ID: u.IdentityID, Email: u.Email, Name: u.Name}, true
+}
+
+// consumeDeletions erases the members urbangate says are leaving, from the
+// suite's shared bus (urbangate ADR 0006). A bus that cannot be reached must
+// not take vvaves down: the connection keeps retrying in the background.
+func consumeDeletions(ctx context.Context, cfg config.Config, members *membership.Service) {
+	if cfg.SuiteNATSURL == "" {
+		log.Print("vvaves: SUITE_NATS_URL is unset, account deletions requested through urbangate do not reach vvaves")
+		return
+	}
+	opts := []nats.Option{nats.MaxReconnects(-1), nats.ReconnectWait(2 * time.Second), nats.Name("vvaves-core"), nats.RetryOnFailedConnect(true)}
+	if cfg.SuiteNATSUser != "" {
+		opts = append(opts, nats.UserInfo(cfg.SuiteNATSUser, cfg.SuiteNATSPassword))
+	}
+	bus, err := nats.Connect(cfg.SuiteNATSURL, opts...)
+	if err != nil {
+		log.Printf("vvaves: suite bus: %v (retrying in the background)", err)
+	}
+	defer bus.Drain()
+	consumer.Run(ctx, bus, members.DeletionHandler(), consumer.Config{
+		StreamName:        "EVENTS",
+		DLQStreamName:     "DLQ",
+		StreamProvisioned: true,
+		Logger:            edalogger.NewJSONSlogLogger(slog.LevelInfo),
+	})
+}
+
+func buildRegistry(cfg config.Config, pool *pgxpool.Pool) (*registry.Service, *registry.KeySource) {
+	if pool == nil {
 		log.Print("vvaves: no DATABASE_URL, the applications registry is off")
 		return nil, registry.NewKeySource(nil, nil, cfg.Keys)
 	}
 	cipher, err := registryinfra.NewCipherFromBase64(cfg.RegistryEncryptionKey)
 	if err != nil {
 		log.Fatalf("vvaves: REGISTRY_ENCRYPTION_KEY: %v", err)
-	}
-	ctx := context.Background()
-	pool, err := db.Open(ctx, cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("vvaves: DATABASE_URL: %v", err)
 	}
 	apps, err := registry.NewService(pool, cipher, cfg.Keys)
 	if err != nil {

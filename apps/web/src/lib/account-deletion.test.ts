@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { revokeEveryKey } from './account-deletion'
+import { eraseMembership, revokeEveryKey } from './account-deletion'
 
 type Call = { method: string; url: string; auth: string | null }
 
@@ -65,5 +65,28 @@ describe('revokeEveryKey', () => {
     await expect(
       revokeEveryKey('http://core', 'tok', fetchCore),
     ).rejects.toThrow(/k1/)
+  })
+})
+
+describe('eraseMembership', () => {
+  it('asks the core to erase the member with the person\'s token', async () => {
+    const { calls, fetchCore } = core({
+      'DELETE http://core/api/v1/me': new Response(null, { status: 202 }),
+    })
+    await eraseMembership('http://core/', 'tok', fetchCore)
+    expect(calls).toEqual([
+      { method: 'DELETE', url: 'http://core/api/v1/me', auth: 'Bearer tok' },
+    ])
+  })
+
+  it('treats a member already erased as done, and any other refusal as a failure', async () => {
+    const gone = core({
+      'DELETE http://core/api/v1/me': json(403, { error: 'account_erased' }),
+    })
+    await expect(eraseMembership('http://core', 'tok', gone.fetchCore)).resolves.toBeUndefined()
+    const down = core({
+      'DELETE http://core/api/v1/me': new Response(null, { status: 503 }),
+    })
+    await expect(eraseMembership('http://core', 'tok', down.fetchCore)).rejects.toThrow('503')
   })
 })
