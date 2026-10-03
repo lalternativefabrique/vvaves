@@ -21,8 +21,9 @@ type Config struct {
 	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
 	// read from CRAWL_MAX_BYTES.
 
-	// TTSProvider is "mistral" to read through Mistral's hosted API; empty
-	// speaks the OpenAI protocol to TTSURL, the self-hosted speech server.
+	// TTSProvider is "mistral" or "elevenlabs" to read through that hosted
+	// API; empty speaks the OpenAI protocol to TTSURL, the self-hosted
+	// speech server.
 	TTSProvider    string
 	TTSURL         string
 	TTSAPIKey      string

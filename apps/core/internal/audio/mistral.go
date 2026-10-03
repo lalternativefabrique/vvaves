@@ -23,6 +23,9 @@ func NewMistralVoice(cfg tts.Config) *tts.OpenAIVoice {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = mistralBaseURL
 	}
+	if cfg.Model == "" {
+		cfg.Model = "voxtral-mini-tts-latest"
+	}
 	next := http.DefaultTransport
 	if cfg.Client != nil && cfg.Client.Transport != nil {
 		next = cfg.Client.Transport

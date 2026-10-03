@@ -368,24 +368,31 @@ func buildVoice(cfg config.Config) tts.Voice {
 			return nil
 		}
 		return tts.NewOpenAIVoice(voiceCfg)
-	case "mistral":
-		if cfg.TTSAPIKey == "" {
-			log.Fatal("vvaves: TTS_PROVIDER=mistral needs TTS_API_KEY")
+	case "mistral", "elevenlabs":
+		if cfg.TTSAPIKey == "" || cfg.TTSVoice == "" {
+			log.Fatalf("vvaves: TTS_PROVIDER=%s needs TTS_API_KEY and TTS_VOICE", cfg.TTSProvider)
 		}
-		// Mistral answers a request only once it has read all of it and reads
-		// best under ~300 words, so WholeText would keep a listener waiting on
-		// the whole page and degrade the end of it.
+		// Hosted voices answer a request only once they have read all of it,
+		// so WholeText would keep a listener waiting on the whole page.
 		if voiceCfg.MaxChars == tts.WholeText {
-			voiceCfg.MaxChars = mistralMaxChars
+			voiceCfg.MaxChars = hostedMaxChars
 		}
-		return audio.NewMistralVoice(voiceCfg)
+		if cfg.TTSProvider == "mistral" {
+			return audio.NewMistralVoice(voiceCfg)
+		}
+		voice, err := audio.NewElevenLabsVoice(voiceCfg)
+		if err != nil {
+			log.Fatalf("vvaves: %v", err)
+		}
+		return voice
 	default:
 		log.Fatalf("vvaves: unknown TTS_PROVIDER %q", cfg.TTSProvider)
 		return nil
 	}
 }
 
-const mistralMaxChars = 1000
+// Mistral reads best under ~300 words per request.
+const hostedMaxChars = 1000
 
 // cacheNamespace keeps the self-hosted voice's readings where they always
 // were, and puts any other provider's under its own name and voice.
