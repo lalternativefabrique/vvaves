@@ -19,6 +19,11 @@ definitions:
     properties:
       id:
         type: string
+      lang:
+        description: |-
+          Lang is the listener's language, as a BCP 47 tag; it picks the voice.
+          Absent, the request's Accept-Language does.
+        type: string
       scope:
         description: |-
           Scope and ID name where a reading is kept. Both optional: an ID lets a

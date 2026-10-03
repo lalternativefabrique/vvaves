@@ -33,8 +33,8 @@ services:
       TTS_PROVIDER: elevenlabs
       TTS_API_KEY: ${ELEVENLABS_API_KEY}
       TTS_MODEL: eleven_multilingual_v2
-      TTS_VOICE: JBFqnCBsd6RMkjVDRZzb
-      TTS_CONCURRENCY: "2"
+      TTS_VOICE: EXAVITQu4vr4xnSDxMaL
+      TTS_CONCURRENCY: "1"
       S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
       S3_REGION: gra
       S3_BUCKET: vvaves-prod-audio

@@ -12,6 +12,8 @@ export type SignedReading = {
   text: string
   scope: string
   id: string
+  /** The listener's language as a BCP 47 tag; picks the voice. Defaults to the browser's Accept-Language. */
+  lang?: string
 }
 
 /**
@@ -22,6 +24,6 @@ export type SignedReading = {
 export function speakSource(reading: SignedReading): VoiceSource {
   return {
     url: reading.url,
-    body: { text: reading.text, scope: reading.scope, id: reading.id, stream: true },
+    body: { text: reading.text, scope: reading.scope, id: reading.id, lang: reading.lang, stream: true },
   }
 }

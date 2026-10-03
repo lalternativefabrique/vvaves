@@ -56,7 +56,11 @@ func main() {
 
 	defer natsbus.CloseSharedConnection()
 
-	reader, primer := buildAudio(cfg)
+	speech := buildAudio(cfg, cfg.TTSVoice)
+	voices := map[string]httpapi.Voice{}
+	for lang, voiceID := range cfg.TTSVoices {
+		voices[lang] = buildAudio(cfg, voiceID)
+	}
 
 	pool := openPool(cfg)
 	apps, keys := buildRegistry(cfg, pool)
@@ -66,8 +70,9 @@ func main() {
 
 	customerKeys := buildCustomerKeys(cfg)
 	deps := httpapi.Deps{
-		Reader:       reader,
-		Primer:       primer,
+		Reader:       speech.Reader,
+		Primer:       speech.Primer,
+		Voices:       voices,
 		Verifier:     signed.NewLookupVerifier(keys.Keys),
 		AppKeyIssuer: keys.IssuerOf,
 		Tokens:       buildTokens(cfg),
@@ -328,36 +333,38 @@ func buildRegistry(cfg config.Config, pool *pgxpool.Pool) (*registry.Service, *r
 // A store that is configured but broken is fatal here rather than silently
 // dropped: someone asked for a cache, and starting without one would hide
 // that behind a bill nobody notices until it arrives.
-func buildAudio(cfg config.Config) (*audioreader.Reader, *audioreader.Primer) {
-	provider := audio.NewProvider(buildVoice(cfg))
+func buildAudio(cfg config.Config, voiceID string) httpapi.Voice {
+	provider := audio.NewProvider(buildVoice(cfg, voiceID))
 	if provider == nil {
-		return nil, nil
+		return httpapi.Voice{}
 	}
 
-	store, err := audio.NewStoreFromEnv(cacheNamespace(cfg))
+	store, err := audio.NewStoreFromEnv(cacheNamespace(cfg, voiceID))
 	if err != nil {
 		log.Fatalf("vvaves: %v", err)
 	}
 	if store == nil {
 		log.Print("vvaves: no S3 bucket configured, every reading will be paid for")
-		return audioreader.NewReader(provider, nil, cfg.AudioOpeningChars, nil), nil
+		return httpapi.Voice{Reader: audioreader.NewReader(provider, nil, cfg.AudioOpeningChars, nil)}
 	}
 
 	// The same opening size on both: they each split the text themselves, and
 	// two different sizes have the halves meet somewhere other than the same
 	// cut — a word read twice, or one skipped.
-	return audioreader.NewReader(provider, store, cfg.AudioOpeningChars, nil),
-		audioreader.NewPrimer(provider, store, cfg.AudioOpeningChars, nil)
+	return httpapi.Voice{
+		Reader: audioreader.NewReader(provider, store, cfg.AudioOpeningChars, nil),
+		Primer: audioreader.NewPrimer(provider, store, cfg.AudioOpeningChars, nil),
+	}
 }
 
 // buildVoice returns nil when no speech service is configured, which the
 // speak handlers report rather than pretending to a disabled mode.
-func buildVoice(cfg config.Config) tts.Voice {
+func buildVoice(cfg config.Config, voiceID string) tts.Voice {
 	voiceCfg := tts.Config{
 		BaseURL:     cfg.TTSURL,
 		APIKey:      cfg.TTSAPIKey,
 		Model:       cfg.TTSModel,
-		VoiceID:     cfg.TTSVoice,
+		VoiceID:     voiceID,
 		Format:      cfg.TTSFormat,
 		MaxChars:    cfg.TTSMaxChars,
 		Concurrency: cfg.TTSConcurrency,
@@ -369,7 +376,7 @@ func buildVoice(cfg config.Config) tts.Voice {
 		}
 		return tts.NewOpenAIVoice(voiceCfg)
 	case "mistral", "elevenlabs":
-		if cfg.TTSAPIKey == "" || cfg.TTSVoice == "" {
+		if cfg.TTSAPIKey == "" || voiceID == "" {
 			log.Fatalf("vvaves: TTS_PROVIDER=%s needs TTS_API_KEY and TTS_VOICE", cfg.TTSProvider)
 		}
 		// Hosted voices answer a request only once they have read all of it,
@@ -396,9 +403,9 @@ const hostedMaxChars = 1000
 
 // cacheNamespace keeps the self-hosted voice's readings where they always
 // were, and puts any other provider's under its own name and voice.
-func cacheNamespace(cfg config.Config) string {
-	if cfg.TTSProvider == "" {
+func cacheNamespace(cfg config.Config, voiceID string) string {
+	if cfg.TTSProvider == "" && voiceID == cfg.TTSVoice {
 		return ""
 	}
-	return cfg.TTSProvider + "/" + cfg.TTSVoice + "/"
+	return cfg.TTSProvider + "/" + voiceID + "/"
 }

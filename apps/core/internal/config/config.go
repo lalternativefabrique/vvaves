@@ -24,11 +24,15 @@ type Config struct {
 	// TTSProvider is "mistral" or "elevenlabs" to read through that hosted
 	// API; empty speaks the OpenAI protocol to TTSURL, the self-hosted
 	// speech server.
-	TTSProvider    string
-	TTSURL         string
-	TTSAPIKey      string
-	TTSModel       string
-	TTSVoice       string
+	TTSProvider string
+	TTSURL      string
+	TTSAPIKey   string
+	TTSModel    string
+	TTSVoice    string
+	// TTSVoices reads a listener's language in its own voice, from
+	// TTS_VOICES as "lang:voice" pairs ("fr:abc,en:def"). A language not
+	// listed is read by TTSVoice.
+	TTSVoices      map[string]string
 	TTSFormat      string
 	TTSMaxChars    int
 	TTSConcurrency int
@@ -135,6 +139,14 @@ func envPairs(key string) map[string][]string {
 			continue
 		}
 		out[issuer] = append(out[issuer], secret)
+	}
+	return out
+}
+
+func envMap(key string) map[string]string {
+	out := map[string]string{}
+	for k, vs := range envPairs(key) {
+		out[strings.ToLower(k)] = vs[len(vs)-1]
 	}
 	return out
 }
