@@ -21,10 +21,18 @@ type Config struct {
 	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
 	// read from CRAWL_MAX_BYTES.
 
-	TTSURL         string
-	TTSAPIKey      string
-	TTSModel       string
-	TTSVoice       string
+	// TTSProvider is "mistral" or "elevenlabs" to read through that hosted
+	// API; empty speaks the OpenAI protocol to TTSURL, the self-hosted
+	// speech server.
+	TTSProvider string
+	TTSURL      string
+	TTSAPIKey   string
+	TTSModel    string
+	TTSVoice    string
+	// TTSVoices reads a listener's language in its own voice, from
+	// TTS_VOICES as "lang:voice" pairs ("fr:abc,en:def"). A language not
+	// listed is read by TTSVoice.
+	TTSVoices      map[string]string
 	TTSFormat      string
 	TTSMaxChars    int
 	TTSConcurrency int
@@ -77,11 +85,12 @@ func Load() Config {
 	return Config{
 		Addr: env("LISTEN_ADDR", ":8080"),
 
-		TTSURL:    os.Getenv("PIPER_URL"),
-		TTSAPIKey: os.Getenv("TTS_API_KEY"),
-		TTSModel:  os.Getenv("TTS_MODEL"),
-		TTSVoice:  os.Getenv("TTS_VOICE"),
-		TTSFormat: env("TTS_FORMAT", "mp3"),
+		TTSProvider: os.Getenv("TTS_PROVIDER"),
+		TTSURL:      os.Getenv("PIPER_URL"),
+		TTSAPIKey:   os.Getenv("TTS_API_KEY"),
+		TTSModel:    os.Getenv("TTS_MODEL"),
+		TTSVoice:    os.Getenv("TTS_VOICE"),
+		TTSFormat:   env("TTS_FORMAT", "mp3"),
 		// WholeText sends every text as one request: the speech server takes any
 		// length, cuts by sentence itself and streams each one as it is read,
 		// so a cut here only adds requests, and each one a prompt prefill and
@@ -130,6 +139,14 @@ func envPairs(key string) map[string][]string {
 			continue
 		}
 		out[issuer] = append(out[issuer], secret)
+	}
+	return out
+}
+
+func envMap(key string) map[string]string {
+	out := map[string]string{}
+	for k, vs := range envPairs(key) {
+		out[strings.ToLower(k)] = vs[len(vs)-1]
 	}
 	return out
 }

@@ -679,6 +679,10 @@
                     "id": {
                         "type": "string"
                     },
+                    "lang": {
+                        "description": "Lang is the listener's language, as a BCP 47 tag; it picks the voice.\nAbsent, the request's Accept-Language does.",
+                        "type": "string"
+                    },
                     "scope": {
                         "description": "Scope and ID name where a reading is kept. Both optional: an ID lets a\ncaller prime a reading before anyone asks for it, since priming means\nnaming ahead of time what will be listened to. Without one the reading\nis still cached, keyed by the text alone — a second listen of the same\nwords finds it, which no caller has to opt into.",
                         "type": "string"

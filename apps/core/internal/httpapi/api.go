@@ -26,6 +26,10 @@ import (
 type Deps struct {
 	Reader *audioreader.Reader
 	Primer *audioreader.Primer
+	// Voices reads a listener's language in a voice of its own, keyed by
+	// primary language subtag ("fr", "en"). A language missing here is read
+	// by Reader and Primer.
+	Voices map[string]Voice
 
 	// Verifier authenticates a /speak request that came straight from a
 	// browser. Nil accepts none, which is what a deployment reachable only
@@ -44,6 +48,11 @@ type Deps struct {
 	// deployment reachable only from inside the cluster, or a laptop. It has
 	// to be said; a vvaves that forgot its keys must refuse, not serve.
 	Unguarded bool
+}
+
+type Voice struct {
+	Reader *audioreader.Reader
+	Primer *audioreader.Primer
 }
 
 func New(d Deps) *http.ServeMux {

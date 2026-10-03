@@ -30,8 +30,10 @@ services:
       SUITE_NATS_USER: vvaves
       SUITE_NATS_PASSWORD: ${NATS_GLOBAL_PASSWORD}
       PIPER_URL: http://tts:5000
-      TTS_MODEL: french_24l
-      TTS_VOICE: estelle
+      TTS_PROVIDER: elevenlabs
+      TTS_API_KEY: ${ELEVENLABS_API_KEY}
+      TTS_MODEL: eleven_multilingual_v2
+      TTS_VOICE: EXAVITQu4vr4xnSDxMaL
       TTS_CONCURRENCY: "1"
       S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
       S3_REGION: gra

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lalternative/packages/go/audioreader"
@@ -21,6 +22,9 @@ type speakRequest struct {
 	Scope  string `json:"scope"`
 	ID     string `json:"id"`
 	Stream bool   `json:"stream"`
+	// Lang is the listener's language, as a BCP 47 tag; it picks the voice.
+	// Absent, the request's Accept-Language does.
+	Lang string `json:"lang"`
 }
 
 const defaultScope = "speak"
@@ -43,6 +47,21 @@ func (r speakRequest) request() audioreader.Request {
 		id = hex.EncodeToString(sum[:])[:16]
 	}
 	return audioreader.Request{Scope: scope, ID: id, Text: r.Text}
+}
+
+// voice picks who reads for this listener. Not signed: it chooses a voice,
+// never what is read, and every voice costs the same.
+func (d Deps) voice(r *http.Request, req speakRequest) Voice {
+	lang := req.Lang
+	if lang == "" {
+		lang, _, _ = strings.Cut(r.Header.Get("Accept-Language"), ",")
+	}
+	lang, _, _ = strings.Cut(lang, ";")
+	lang, _, _ = strings.Cut(strings.TrimSpace(lang), "-")
+	if v, ok := d.Voices[strings.ToLower(lang)]; ok {
+		return v
+	}
+	return Voice{Reader: d.Reader, Primer: d.Primer}
 }
 
 // decodeSpeak reads and validates a speak-shaped body, reporting whether the
@@ -86,12 +105,13 @@ func decodeSpeak(w http.ResponseWriter, r *http.Request) (speakRequest, bool) {
 // @ID       speak
 func handleSpeak(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if d.Reader == nil {
-			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
-			return
-		}
 		req, ok := decodeSpeak(w, r)
 		if !ok {
+			return
+		}
+		voice := d.voice(r, req)
+		if voice.Reader == nil {
+			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return
 		}
 
@@ -110,7 +130,7 @@ func handleSpeak(d Deps) http.HandlerFunc {
 			r.URL.RawQuery = q.Encode()
 		}
 
-		d.Reader.Serve(w, r, ar, map[string]any{"scope": ar.Scope, "id": ar.ID})
+		voice.Reader.Serve(w, r, ar, map[string]any{"scope": ar.Scope, "id": ar.ID})
 	}
 }
 
@@ -139,12 +159,13 @@ func handleSpeak(d Deps) http.HandlerFunc {
 // @ID       primeSpeak
 func handlePrime(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if d.Primer == nil {
-			writeError(w, http.StatusServiceUnavailable, "priming needs both speech and a store")
-			return
-		}
 		req, ok := decodeSpeak(w, r)
 		if !ok {
+			return
+		}
+		voice := d.voice(r, req)
+		if voice.Primer == nil {
+			writeError(w, http.StatusServiceUnavailable, "priming needs both speech and a store")
 			return
 		}
 		if req.ID == "" {
@@ -162,7 +183,7 @@ func handlePrime(d Deps) http.HandlerFunc {
 			// context is torn down the moment that answer lands.
 			ctx, cancel := context.WithTimeout(context.Background(), primeTimeout)
 			defer cancel()
-			if err := d.Primer.PrimeOpening(ctx, ar.Scope, ar.ID, ar.Text); err != nil {
+			if err := voice.Primer.PrimeOpening(ctx, ar.Scope, ar.ID, ar.Text); err != nil {
 				log.Printf("vvaves: prime %s/%s: %v", ar.Scope, ar.ID, err)
 			}
 		}()
@@ -194,12 +215,13 @@ func handlePrime(d Deps) http.HandlerFunc {
 // @ID       pregenerateSpeak
 func handlePregenerate(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if d.Reader == nil {
-			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
-			return
-		}
 		req, ok := decodeSpeak(w, r)
 		if !ok {
+			return
+		}
+		voice := d.voice(r, req)
+		if voice.Reader == nil {
+			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return
 		}
 
@@ -211,7 +233,7 @@ func handlePregenerate(d Deps) http.HandlerFunc {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), primeTimeout)
 			defer cancel()
-			if err := d.Reader.Pregenerate(ctx, ar); err != nil {
+			if err := voice.Reader.Pregenerate(ctx, ar); err != nil {
 				log.Printf("vvaves: pregenerate %s/%s: %v", ar.Scope, ar.ID, err)
 			}
 		}()
@@ -242,12 +264,13 @@ type existsResponse struct {
 // @ID       speakExists
 func handleExists(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if d.Reader == nil {
-			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
-			return
-		}
 		req, ok := decodeSpeak(w, r)
 		if !ok {
+			return
+		}
+		voice := d.voice(r, req)
+		if voice.Reader == nil {
+			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return
 		}
 		ar := req.request()
@@ -256,7 +279,7 @@ func handleExists(d Deps) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, existsResponse{
-			Ready: d.Reader.Exists(r.Context(), ar),
+			Ready: voice.Reader.Exists(r.Context(), ar),
 		})
 	}
 }
