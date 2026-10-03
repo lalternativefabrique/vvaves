@@ -334,7 +334,7 @@ func buildAudio(cfg config.Config) (*audioreader.Reader, *audioreader.Primer) {
 		return nil, nil
 	}
 
-	store, err := audio.NewStoreFromEnv()
+	store, err := audio.NewStoreFromEnv(cacheNamespace(cfg))
 	if err != nil {
 		log.Fatalf("vvaves: %v", err)
 	}
@@ -353,10 +353,7 @@ func buildAudio(cfg config.Config) (*audioreader.Reader, *audioreader.Primer) {
 // buildVoice returns nil when no speech service is configured, which the
 // speak handlers report rather than pretending to a disabled mode.
 func buildVoice(cfg config.Config) tts.Voice {
-	if cfg.TTSURL == "" {
-		return nil
-	}
-	return tts.NewOpenAIVoice(tts.Config{
+	voiceCfg := tts.Config{
 		BaseURL:     cfg.TTSURL,
 		APIKey:      cfg.TTSAPIKey,
 		Model:       cfg.TTSModel,
@@ -364,5 +361,37 @@ func buildVoice(cfg config.Config) tts.Voice {
 		Format:      cfg.TTSFormat,
 		MaxChars:    cfg.TTSMaxChars,
 		Concurrency: cfg.TTSConcurrency,
-	})
+	}
+	switch cfg.TTSProvider {
+	case "":
+		if cfg.TTSURL == "" {
+			return nil
+		}
+		return tts.NewOpenAIVoice(voiceCfg)
+	case "mistral":
+		if cfg.TTSAPIKey == "" {
+			log.Fatal("vvaves: TTS_PROVIDER=mistral needs TTS_API_KEY")
+		}
+		// Mistral answers a request only once it has read all of it and reads
+		// best under ~300 words, so WholeText would keep a listener waiting on
+		// the whole page and degrade the end of it.
+		if voiceCfg.MaxChars == tts.WholeText {
+			voiceCfg.MaxChars = mistralMaxChars
+		}
+		return audio.NewMistralVoice(voiceCfg)
+	default:
+		log.Fatalf("vvaves: unknown TTS_PROVIDER %q", cfg.TTSProvider)
+		return nil
+	}
+}
+
+const mistralMaxChars = 1000
+
+// cacheNamespace keeps the self-hosted voice's readings where they always
+// were, and puts any other provider's under its own name and voice.
+func cacheNamespace(cfg config.Config) string {
+	if cfg.TTSProvider == "" {
+		return ""
+	}
+	return cfg.TTSProvider + "/" + cfg.TTSVoice + "/"
 }

@@ -21,6 +21,9 @@ type Config struct {
 	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
 	// read from CRAWL_MAX_BYTES.
 
+	// TTSProvider is "mistral" to read through Mistral's hosted API; empty
+	// speaks the OpenAI protocol to TTSURL, the self-hosted speech server.
+	TTSProvider    string
 	TTSURL         string
 	TTSAPIKey      string
 	TTSModel       string
@@ -77,11 +80,12 @@ func Load() Config {
 	return Config{
 		Addr: env("LISTEN_ADDR", ":8080"),
 
-		TTSURL:    os.Getenv("PIPER_URL"),
-		TTSAPIKey: os.Getenv("TTS_API_KEY"),
-		TTSModel:  os.Getenv("TTS_MODEL"),
-		TTSVoice:  os.Getenv("TTS_VOICE"),
-		TTSFormat: env("TTS_FORMAT", "mp3"),
+		TTSProvider: os.Getenv("TTS_PROVIDER"),
+		TTSURL:      os.Getenv("PIPER_URL"),
+		TTSAPIKey:   os.Getenv("TTS_API_KEY"),
+		TTSModel:    os.Getenv("TTS_MODEL"),
+		TTSVoice:    os.Getenv("TTS_VOICE"),
+		TTSFormat:   env("TTS_FORMAT", "mp3"),
 		// WholeText sends every text as one request: the speech server takes any
 		// length, cuts by sentence itself and streams each one as it is read,
 		// so a cut here only adds requests, and each one a prompt prefill and

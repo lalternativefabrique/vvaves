@@ -24,12 +24,16 @@ import (
 type Store struct {
 	client *s3.Client
 	bucket string
+	prefix string
 }
 
 var _ audioreader.Store = (*Store)(nil)
 
 // NewStoreFromEnv builds a Store from S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY,
-// S3_SECRET_KEY and S3_BUCKET.
+// S3_SECRET_KEY and S3_BUCKET. Every key is put under prefix, so that two
+// voices never share a reading: the cache key names the text, not who reads
+// it, and an opening kept from one voice would play before the rest in the
+// other.
 //
 // It returns (nil, nil) when none of them are set: a vvaves with no bucket
 // still reads text aloud, it just pays for every reading. Half a
@@ -40,7 +44,7 @@ var _ audioreader.Store = (*Store)(nil)
 // result stays nil when the caller tests it. Boxing a nil pointer in an
 // interface yields a non-nil interface, and every `== nil` guard downstream
 // would pass before dereferencing it.
-func NewStoreFromEnv() (*Store, error) {
+func NewStoreFromEnv(prefix string) (*Store, error) {
 	endpoint := os.Getenv("S3_ENDPOINT")
 	accessKey := os.Getenv("S3_ACCESS_KEY")
 	secretKey := os.Getenv("S3_SECRET_KEY")
@@ -76,13 +80,14 @@ func NewStoreFromEnv() (*Store, error) {
 			o.UsePathStyle = true
 		}),
 		bucket: bucket,
+		prefix: prefix,
 	}, nil
 }
 
 func (s *Store) Upload(ctx context.Context, key string, body io.Reader, contentType string) error {
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
-		Key:         aws.String(key),
+		Key:         aws.String(s.prefix + key),
 		Body:        body,
 		ContentType: aws.String(contentType),
 	})
@@ -98,7 +103,7 @@ func (s *Store) Upload(ctx context.Context, key string, body io.Reader, contentT
 func (s *Store) Download(ctx context.Context, key string) (io.ReadCloser, error) {
 	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
+		Key:    aws.String(s.prefix + key),
 	})
 	if err != nil {
 		var noSuchKey *s3types.NoSuchKey

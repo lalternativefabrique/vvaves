@@ -30,9 +30,11 @@ services:
       SUITE_NATS_USER: vvaves
       SUITE_NATS_PASSWORD: ${NATS_GLOBAL_PASSWORD}
       PIPER_URL: http://tts:5000
-      TTS_MODEL: french_24l
-      TTS_VOICE: estelle
-      TTS_CONCURRENCY: "1"
+      TTS_PROVIDER: mistral
+      TTS_API_KEY: ${MISTRAL_API_KEY}
+      TTS_MODEL: voxtral-mini-tts-latest
+      TTS_VOICE: en_paul_sad
+      TTS_CONCURRENCY: "2"
       S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
       S3_REGION: gra
       S3_BUCKET: vvaves-prod-audio
