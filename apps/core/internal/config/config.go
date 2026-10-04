@@ -36,6 +36,10 @@ type Config struct {
 	TTSFormat      string
 	TTSMaxChars    int
 	TTSConcurrency int
+	// TTSProviderConcurrency caps requests in flight to a hosted provider
+	// across every voice, read from TTS_PROVIDER_CONCURRENCY: the plan's
+	// limit is per account, not per voice.
+	TTSProviderConcurrency int
 
 	AudioOpeningChars int
 
@@ -101,7 +105,8 @@ func Load() Config {
 		// One request now covers a reading, and the speech server takes one
 		// slot per request: reading pieces concurrently would spend a
 		// listener's slots on their own text.
-		TTSConcurrency: envInt("TTS_CONCURRENCY", 1),
+		TTSConcurrency:         envInt("TTS_CONCURRENCY", 1),
+		TTSProviderConcurrency: envInt("TTS_PROVIDER_CONCURRENCY", 2),
 
 		// Not TTSMaxChars, though both are a number of characters. That one is
 		// how much text goes to the speech server at once; this is how much of
