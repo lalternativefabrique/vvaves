@@ -4,9 +4,9 @@
 # was live when. No deploy reads it: the node keeps a rolled image on
 # its own until deploy.yaml changes that service's tag. Editing this
 # file changes nothing: the next roll overwrites it.
-# last updated: 2026-10-04T05:07:38Z
+# last updated: 2026-10-04T05:16:44Z
 tags:
   vvaves-app: "20261004-0458-37025b0f5579"
   vvaves-migrate: "20261004-0458-37025b0f5579"
-  vvaves-tts: "20260929-1541-7d4e159785cf"
+  vvaves-tts: "20261004-0458-37025b0f5579"
   vvaves-web: "20261004-0458-37025b0f5579"
