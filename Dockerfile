@@ -22,7 +22,9 @@ COPY --from=build /out/vvaves /usr/local/bin/vvaves
 # decoding path: this service renders HTML and reads no media, so the
 # dependency buys nothing here and removing it beats ignoring the finding.
 # poppler-utils is pdftotext and pdfinfo, which /fetch reads PDFs with.
+# The upgrade pulls Ubuntu security fixes the pinned Playwright base predates.
 RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends poppler-utils \
     && apt-get remove -y --purge \
       gstreamer1.0-plugins-bad \
