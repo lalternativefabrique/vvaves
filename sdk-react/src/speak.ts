@@ -14,7 +14,11 @@ export type SignedReading = {
   id: string
   /** The listener's language as a BCP 47 tag; picks the voice. Defaults to the browser's Accept-Language. */
   lang?: string
+  /** The voice the listener wants to hear. Defaults to female; honoured when vvaves has such a voice for the language. */
+  gender?: VoiceGender
 }
+
+export type VoiceGender = 'female' | 'male' | 'neutral'
 
 /**
  * Builds the request the browser sends vvaves for a signed reading. Always
@@ -24,6 +28,13 @@ export type SignedReading = {
 export function speakSource(reading: SignedReading): VoiceSource {
   return {
     url: reading.url,
-    body: { text: reading.text, scope: reading.scope, id: reading.id, lang: reading.lang, stream: true },
+    body: {
+      text: reading.text,
+      scope: reading.scope,
+      id: reading.id,
+      lang: reading.lang,
+      gender: reading.gender,
+      stream: true,
+    },
   }
 }

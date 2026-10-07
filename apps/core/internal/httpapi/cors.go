@@ -11,7 +11,7 @@ import "net/http"
 const (
 	corsAllowMethods  = "POST"
 	corsAllowHeaders  = "Content-Type, Range"
-	corsExposeHeaders = "Accept-Ranges, Content-Length, Content-Range, Content-Type, X-Tts-Cache"
+	corsExposeHeaders = "Accept-Ranges, Content-Length, Content-Range, Content-Type, X-Tts-Cache, X-Tts-Voice"
 	corsMaxAge        = "86400"
 )
 

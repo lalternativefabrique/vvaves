@@ -25,7 +25,19 @@ type speakRequest struct {
 	// Lang is the listener's language, as a BCP 47 tag; it picks the voice.
 	// Absent, the request's Accept-Language does.
 	Lang string `json:"lang"`
+	// Gender is the voice the listener wants to hear: female, male or
+	// neutral. Absent, DefaultGender. A gender no configured voice reads in
+	// is honoured as far as the language, never refused.
+	Gender string `json:"gender" enums:"female,male,neutral"`
 }
+
+// DefaultGender reads for a listener who did not say.
+const DefaultGender = "female"
+
+// voiceHeader tells the listener which voice read, as the key that picked it
+// ("fr/female", "fr", "*/female") or "default", so a client can tell a
+// request honoured from one that fell back.
+const voiceHeader = "X-Tts-Voice"
 
 const defaultScope = "speak"
 
@@ -49,19 +61,28 @@ func (r speakRequest) request() audioreader.Request {
 	return audioreader.Request{Scope: scope, ID: id, Text: r.Text}
 }
 
-// voice picks who reads for this listener. Not signed: it chooses a voice,
-// never what is read, and every voice costs the same.
-func (d Deps) voice(r *http.Request, req speakRequest) Voice {
+// voice picks who reads for this listener and names the key that chose it.
+// Not signed: it chooses a voice, never what is read, and every voice costs
+// the same. The nearest declared voice wins: their language in their gender,
+// then their language, then their gender in any language, then the default.
+func (d Deps) voice(r *http.Request, req speakRequest) (Voice, string) {
 	lang := req.Lang
 	if lang == "" {
 		lang, _, _ = strings.Cut(r.Header.Get("Accept-Language"), ",")
 	}
 	lang, _, _ = strings.Cut(lang, ";")
 	lang, _, _ = strings.Cut(strings.TrimSpace(lang), "-")
-	if v, ok := d.Voices[strings.ToLower(lang)]; ok {
-		return v
+	lang = strings.ToLower(lang)
+	gender := strings.ToLower(strings.TrimSpace(req.Gender))
+	if gender == "" {
+		gender = DefaultGender
 	}
-	return Voice{Reader: d.Reader, Primer: d.Primer}
+	for _, key := range []string{lang + "/" + gender, lang, "*/" + gender} {
+		if v, ok := d.Voices[key]; ok {
+			return v, key
+		}
+	}
+	return Voice{Reader: d.Reader, Primer: d.Primer}, "default"
 }
 
 // decodeSpeak reads and validates a speak-shaped body, reporting whether the
@@ -109,7 +130,8 @@ func handleSpeak(d Deps) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		voice := d.voice(r, req)
+		voice, chosen := d.voice(r, req)
+		w.Header().Set(voiceHeader, chosen)
 		if voice.Reader == nil {
 			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return
@@ -163,7 +185,8 @@ func handlePrime(d Deps) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		voice := d.voice(r, req)
+		voice, chosen := d.voice(r, req)
+		w.Header().Set(voiceHeader, chosen)
 		if voice.Primer == nil {
 			writeError(w, http.StatusServiceUnavailable, "priming needs both speech and a store")
 			return
@@ -219,7 +242,8 @@ func handlePregenerate(d Deps) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		voice := d.voice(r, req)
+		voice, chosen := d.voice(r, req)
+		w.Header().Set(voiceHeader, chosen)
 		if voice.Reader == nil {
 			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return
@@ -268,7 +292,8 @@ func handleExists(d Deps) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		voice := d.voice(r, req)
+		voice, chosen := d.voice(r, req)
+		w.Header().Set(voiceHeader, chosen)
 		if voice.Reader == nil {
 			writeError(w, http.StatusServiceUnavailable, "speech is not configured")
 			return

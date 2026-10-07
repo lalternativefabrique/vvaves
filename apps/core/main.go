@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -59,8 +60,12 @@ func main() {
 	newVoice := voiceMaker(cfg)
 	speech := buildAudio(cfg, newVoice, cfg.TTSVoice, "")
 	voices := map[string]httpapi.Voice{}
-	for lang, voiceID := range cfg.TTSVoices {
-		voices[lang] = buildAudio(cfg, newVoice, voiceID, lang)
+	for key, voiceID := range cfg.TTSVoices {
+		lang, _, _ := strings.Cut(key, "/")
+		if lang == "*" {
+			lang = ""
+		}
+		voices[key] = buildAudio(cfg, newVoice, voiceID, lang)
 	}
 
 	pool := openPool(cfg)

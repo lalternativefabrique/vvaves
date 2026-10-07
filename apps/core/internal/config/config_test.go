@@ -45,3 +45,18 @@ func TestAnIssuerMayHoldSeveralSecrets(t *testing.T) {
 		t.Errorf("keys[lalter] = %q, want both, in order", got)
 	}
 }
+
+func TestVoicesAreReadByLanguageAndGender(t *testing.T) {
+	t.Setenv("TTS_VOICES", "fr:aaa, FR:Female:bbb,en:ccc,*:male:ddd,broken,:x,fr::")
+
+	voices := Load().TTSVoices
+	want := map[string]string{"fr": "aaa", "fr/female": "bbb", "en": "ccc", "*/male": "ddd"}
+	if len(voices) != len(want) {
+		t.Fatalf("voices = %v, want %v", voices, want)
+	}
+	for k, v := range want {
+		if voices[k] != v {
+			t.Errorf("voices[%s] = %q, want %q", k, voices[k], v)
+		}
+	}
+}

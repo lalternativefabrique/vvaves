@@ -29,9 +29,11 @@ type Config struct {
 	TTSAPIKey   string
 	TTSModel    string
 	TTSVoice    string
-	// TTSVoices reads a listener's language in its own voice, from
-	// TTS_VOICES as "lang:voice" pairs ("fr:abc,en:def"). A language not
-	// listed is read by TTSVoice.
+	// TTSVoices reads a listener in a voice of their language and, when one
+	// is declared for it, of the gender they asked for. TTS_VOICES holds
+	// "lang:voice" and "lang:gender:voice" entries ("fr:abc,fr:male:def"),
+	// keyed here as "fr" and "fr/male"; "*" as the language covers every
+	// language ("*:male:ghi"). What no entry covers is read by TTSVoice.
 	TTSVoices      map[string]string
 	TTSFormat      string
 	TTSMaxChars    int
@@ -94,6 +96,7 @@ func Load() Config {
 		TTSAPIKey:   os.Getenv("TTS_API_KEY"),
 		TTSModel:    os.Getenv("TTS_MODEL"),
 		TTSVoice:    os.Getenv("TTS_VOICE"),
+		TTSVoices:   envVoices("TTS_VOICES"),
 		TTSFormat:   env("TTS_FORMAT", "mp3"),
 		// WholeText sends every text as one request: the speech server takes any
 		// length, cuts by sentence itself and streams each one as it is read,
@@ -152,6 +155,26 @@ func envMap(key string) map[string]string {
 	out := map[string]string{}
 	for k, vs := range envPairs(key) {
 		out[strings.ToLower(k)] = vs[len(vs)-1]
+	}
+	return out
+}
+
+// envVoices reads "lang:voice" and "lang:gender:voice" entries into a map
+// keyed by "lang" or "lang/gender". An entry it cannot read is dropped: a
+// voice half-declared would be a listener read in the wrong one.
+func envVoices(key string) map[string]string {
+	out := map[string]string{}
+	for _, entry := range strings.Split(os.Getenv(key), ",") {
+		parts := strings.Split(strings.TrimSpace(entry), ":")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		switch {
+		case len(parts) == 2 && parts[0] != "" && parts[1] != "":
+			out[strings.ToLower(parts[0])] = parts[1]
+		case len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "":
+			out[strings.ToLower(parts[0]+"/"+parts[1])] = parts[2]
+		}
 	}
 	return out
 }
