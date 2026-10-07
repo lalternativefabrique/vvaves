@@ -17,6 +17,16 @@ definitions:
     type: object
   httpapi.speakRequest:
     properties:
+      gender:
+        description: |-
+          Gender is the voice the listener wants to hear: female, male or
+          neutral. Absent, DefaultGender. A gender no configured voice reads in
+          is honoured as far as the language, never refused.
+        enum:
+        - female
+        - male
+        - neutral
+        type: string
       id:
         type: string
       lang:

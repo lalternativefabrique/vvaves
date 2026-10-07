@@ -26,9 +26,10 @@ import (
 type Deps struct {
 	Reader *audioreader.Reader
 	Primer *audioreader.Primer
-	// Voices reads a listener's language in a voice of its own, keyed by
-	// primary language subtag ("fr", "en"). A language missing here is read
-	// by Reader and Primer.
+	// Voices reads a listener in a voice of their language and gender, keyed
+	// by primary language subtag ("fr") or by subtag and gender ("fr/male");
+	// "*" as the subtag covers every language ("*/male"). A listener no key
+	// covers is read by Reader and Primer.
 	Voices map[string]Voice
 
 	// Verifier authenticates a /speak request that came straight from a

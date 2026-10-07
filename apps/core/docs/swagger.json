@@ -573,6 +573,15 @@
         "httpapi.speakRequest": {
             "type": "object",
             "properties": {
+                "gender": {
+                    "description": "Gender is the voice the listener wants to hear: female, male or\nneutral. Absent, DefaultGender. A gender no configured voice reads in\nis honoured as far as the language, never refused.",
+                    "type": "string",
+                    "enum": [
+                        "female",
+                        "male",
+                        "neutral"
+                    ]
+                },
                 "id": {
                     "type": "string"
                 },
