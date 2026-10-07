@@ -56,10 +56,11 @@ func main() {
 
 	defer natsbus.CloseSharedConnection()
 
-	speech := buildAudio(cfg, cfg.TTSVoice)
+	newVoice := voiceMaker(cfg)
+	speech := buildAudio(cfg, newVoice, cfg.TTSVoice, "")
 	voices := map[string]httpapi.Voice{}
 	for lang, voiceID := range cfg.TTSVoices {
-		voices[lang] = buildAudio(cfg, voiceID)
+		voices[lang] = buildAudio(cfg, newVoice, voiceID, lang)
 	}
 
 	pool := openPool(cfg)
@@ -333,13 +334,13 @@ func buildRegistry(cfg config.Config, pool *pgxpool.Pool) (*registry.Service, *r
 // A store that is configured but broken is fatal here rather than silently
 // dropped: someone asked for a cache, and starting without one would hide
 // that behind a bill nobody notices until it arrives.
-func buildAudio(cfg config.Config, voiceID string) httpapi.Voice {
-	provider := audio.NewProvider(buildVoice(cfg, voiceID))
+func buildAudio(cfg config.Config, newVoice func(voiceID, lang string) tts.Voice, voiceID, lang string) httpapi.Voice {
+	provider := audio.NewProvider(newVoice(voiceID, lang))
 	if provider == nil {
 		return httpapi.Voice{}
 	}
 
-	store, err := audio.NewStoreFromEnv(cacheNamespace(cfg, voiceID))
+	store, err := audio.NewStoreFromEnv(cacheNamespace(cfg, voiceID, lang))
 	if err != nil {
 		log.Fatalf("vvaves: %v", err)
 	}
@@ -357,55 +358,87 @@ func buildAudio(cfg config.Config, voiceID string) httpapi.Voice {
 	}
 }
 
-// buildVoice returns nil when no speech service is configured, which the
-// speak handlers report rather than pretending to a disabled mode.
-func buildVoice(cfg config.Config, voiceID string) tts.Voice {
-	voiceCfg := tts.Config{
-		BaseURL:     cfg.TTSURL,
+// voiceMaker returns how to build a voice for a language, nil when no
+// speech service is configured, which the speak handlers report rather than
+// pretending to a disabled mode.
+func voiceMaker(cfg config.Config) func(voiceID, lang string) tts.Voice {
+	base := tts.Config{
 		APIKey:      cfg.TTSAPIKey,
 		Model:       cfg.TTSModel,
-		VoiceID:     voiceID,
 		Format:      cfg.TTSFormat,
 		MaxChars:    cfg.TTSMaxChars,
 		Concurrency: cfg.TTSConcurrency,
 	}
+	if cfg.TTSProvider != "" && cfg.TTSAPIKey == "" {
+		log.Fatalf("vvaves: TTS_PROVIDER=%s needs TTS_API_KEY", cfg.TTSProvider)
+	}
+
 	switch cfg.TTSProvider {
 	case "":
-		if cfg.TTSURL == "" {
-			return nil
+		return func(voiceID, _ string) tts.Voice {
+			if cfg.TTSURL == "" {
+				return nil
+			}
+			voiceCfg := base
+			voiceCfg.BaseURL = cfg.TTSURL
+			voiceCfg.VoiceID = voiceID
+			return tts.NewOpenAIVoice(voiceCfg)
 		}
-		return tts.NewOpenAIVoice(voiceCfg)
-	case "mistral", "elevenlabs":
-		if cfg.TTSAPIKey == "" || voiceID == "" {
-			log.Fatalf("vvaves: TTS_PROVIDER=%s needs TTS_API_KEY and TTS_VOICE", cfg.TTSProvider)
+	case "elevenlabs":
+		account := audio.NewElevenLabs("", cfg.TTSAPIKey, cfg.TTSProviderConcurrency)
+		return func(voiceID, lang string) tts.Voice {
+			voiceCfg := base
+			voiceCfg.VoiceID = requireVoice(cfg, voiceID)
+			if voiceCfg.MaxChars == tts.WholeText {
+				voiceCfg.MaxChars = audio.ElevenLabsMaxChars
+			}
+			voice, err := account.Voice(voiceCfg, lang)
+			if err != nil {
+				log.Fatalf("vvaves: %v", err)
+			}
+			return voice
 		}
-		// Hosted voices answer a request only once they have read all of it,
-		// so WholeText would keep a listener waiting on the whole page.
-		if voiceCfg.MaxChars == tts.WholeText {
-			voiceCfg.MaxChars = hostedMaxChars
-		}
-		if cfg.TTSProvider == "mistral" {
+	case "mistral":
+		return func(voiceID, _ string) tts.Voice {
+			voiceCfg := base
+			voiceCfg.VoiceID = requireVoice(cfg, voiceID)
+			// Mistral answers a request only once it has read all of it, so
+			// WholeText would keep a listener waiting on the whole page.
+			if voiceCfg.MaxChars == tts.WholeText {
+				voiceCfg.MaxChars = mistralMaxChars
+			}
 			return audio.NewMistralVoice(voiceCfg)
 		}
-		voice, err := audio.NewElevenLabsVoice(voiceCfg)
-		if err != nil {
-			log.Fatalf("vvaves: %v", err)
-		}
-		return voice
 	default:
 		log.Fatalf("vvaves: unknown TTS_PROVIDER %q", cfg.TTSProvider)
 		return nil
 	}
 }
 
+func requireVoice(cfg config.Config, voiceID string) string {
+	if voiceID == "" {
+		log.Fatalf("vvaves: TTS_PROVIDER=%s needs TTS_VOICE", cfg.TTSProvider)
+	}
+	return voiceID
+}
+
 // Mistral reads best under ~300 words per request.
-const hostedMaxChars = 1000
+const mistralMaxChars = 1000
 
 // cacheNamespace keeps the self-hosted voice's readings where they always
-// were, and puts any other provider's under its own name and voice.
-func cacheNamespace(cfg config.Config, voiceID string) string {
+// were, and puts any other's under everything that changes the audio: the
+// provider, model, voice and enforced language.
+func cacheNamespace(cfg config.Config, voiceID, lang string) string {
 	if cfg.TTSProvider == "" && voiceID == cfg.TTSVoice {
 		return ""
 	}
-	return cfg.TTSProvider + "/" + voiceID + "/"
+	ns := cfg.TTSProvider + "/"
+	if cfg.TTSModel != "" {
+		ns += cfg.TTSModel + "/"
+	}
+	ns += voiceID + "/"
+	if lang != "" {
+		ns += lang + "/"
+	}
+	return ns
 }

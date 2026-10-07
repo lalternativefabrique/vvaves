@@ -32,9 +32,11 @@ services:
       PIPER_URL: http://tts:5000
       TTS_PROVIDER: elevenlabs
       TTS_API_KEY: ${ELEVENLABS_API_KEY}
-      TTS_MODEL: eleven_multilingual_v2
+      TTS_MODEL: eleven_flash_v2_5
       TTS_VOICE: EXAVITQu4vr4xnSDxMaL
-      TTS_CONCURRENCY: "1"
+      TTS_VOICES: fr:EXAVITQu4vr4xnSDxMaL,en:EXAVITQu4vr4xnSDxMaL
+      TTS_CONCURRENCY: "2"
+      TTS_PROVIDER_CONCURRENCY: "2"
       S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
       S3_REGION: gra
       S3_BUCKET: vvaves-prod-audio
