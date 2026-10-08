@@ -229,14 +229,8 @@ func (v *Voice) post(ctx context.Context, path string, payload map[string]any) (
 		return nil, fmt.Errorf("tts: build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if v.cfg.Authorize != nil {
-		if err := v.cfg.Authorize(req); err != nil {
-			return nil, fmt.Errorf("tts: authorize: %w", err)
-		}
-	} else if strings.HasPrefix(v.cfg.Key, CustomerKeyPrefix) {
-		req.Header.Set("Authorization", "Bearer "+v.cfg.Key)
-	} else if v.cfg.Key != "" {
-		req.Header.Set(HeaderKey, v.cfg.Key)
+	if err := v.authorize(req); err != nil {
+		return nil, fmt.Errorf("tts: authorize: %w", err)
 	}
 	resp, err := v.cfg.Client.Do(req)
 	if err != nil {
@@ -248,6 +242,18 @@ func (v *Voice) post(ctx context.Context, path string, payload map[string]any) (
 		return nil, fmt.Errorf("tts: status %d: %s", resp.StatusCode, bytes.TrimSpace(detail))
 	}
 	return resp, nil
+}
+
+func (v *Voice) authorize(req *http.Request) error {
+	switch {
+	case v.cfg.Authorize != nil:
+		return v.cfg.Authorize(req)
+	case strings.HasPrefix(v.cfg.Key, CustomerKeyPrefix):
+		req.Header.Set("Authorization", "Bearer "+v.cfg.Key)
+	case v.cfg.Key != "":
+		req.Header.Set(HeaderKey, v.cfg.Key)
+	}
+	return nil
 }
 
 func respMIME(resp *http.Response) string {

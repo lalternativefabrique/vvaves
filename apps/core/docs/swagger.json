@@ -604,6 +604,69 @@
                     }
                 }
             }
+        },
+        "/transcribe": {
+            "post": {
+                "description": "Takes the service credentials /speak/prime takes, under the vvaves:transcribe scope; a signed listener URL is refused.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transcribe"
+                ],
+                "summary": "Turn a recording into text",
+                "operationId": "transcribe",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Recording (webm, ogg, m4a, wav, mp3), at most 25 MB",
+                        "name": "audio",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ISO language code; empty lets the model detect it",
+                        "name": "language",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.transcribeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -668,6 +731,14 @@
                 "stream": {
                     "type": "boolean"
                 },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpapi.transcribeResponse": {
+            "type": "object",
+            "properties": {
                 "text": {
                     "type": "string"
                 }
