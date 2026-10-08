@@ -235,7 +235,8 @@ rewrite the contract:
   `Pregenerate`, `Exists` and the `*Named` variants map onto the routes above.
 - `signed` (Go) holds the signature scheme. `signed.NewSigner` mints the URL
   the application hands its browser; vvaves verifies with the same package.
-- `sdk-react` (npm, `@lalternative/vvaves-sdk-react`) plays a signed reading
+- [`@lalternative/vvaves-sdk-react`](https://github.com/lalternativefabrique/packages/tree/main/vvaves/sdk-react)
+  (in the packages repo, beside `vvaves/sdk-go`) plays a signed reading
   in the browser: `speakSource` builds the request, `useVoicePlayback`
   streams and decodes it.
 
