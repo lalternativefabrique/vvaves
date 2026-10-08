@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
-	"github.com/lalternativefabrique/vvaves/signed"
 )
 
 const signingSecret = "vvaves-own-secret"
@@ -83,7 +83,7 @@ func TestSignRequiresACredential(t *testing.T) {
 
 // A signature that plays one reading must not mint more of them.
 func TestSignRefusesASignatureAsCredential(t *testing.T) {
-	q := signed.Sign(testIssuer, testKey, signed.Params{
+	q, _ := signed.Sign(testIssuer, testKey, signed.Params{
 		Scope: "chat", ID: "m1", TextHash: signed.HashText(longText), Expires: time.Now().Add(time.Minute),
 	})
 	rec := post(t, httpapi.New(signingDeps(t)), "/speak/sign?"+q.Encode(), speakBody)

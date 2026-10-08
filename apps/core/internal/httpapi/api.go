@@ -13,7 +13,7 @@ import (
 
 	"github.com/lalternative/packages/go/audioreader"
 
-	"github.com/lalternativefabrique/vvaves/signed"
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 )
 
 // Deps are the backends the handlers speak to. A nil Reader or Renderer means

@@ -95,6 +95,8 @@ github.com/lalternative/packages/go/tts v0.6.0 h1:iT3VQw0jghf9dJanyf1vrXmZYKY2tT
 github.com/lalternative/packages/go/tts v0.6.0/go.mod h1:75KtxuFNBMQfVXAcg1cMllRMG/7iwfSSnjmCblFTYVA=
 github.com/lalternative/packages/go/websession v0.2.0 h1:h/R4X40zOzK+jQtMlKyvwBrxgxarak1RTX4tc7F7oM4=
 github.com/lalternative/packages/go/websession v0.2.0/go.mod h1:PH0a3YEZTRPeMCofc/rkxpnbLSOheZnWoP+7ZagdkCQ=
+github.com/lalternative/packages/vvaves/sdk-go v0.3.0 h1:TgPojZW1hZfbtkG3sJMB05krEqILvBS56Stb7mQ9qwI=
+github.com/lalternative/packages/vvaves/sdk-go v0.3.0/go.mod h1:zPbIXYGXuoW63d2hOt7K0A9/e+JR5GJj7drJbzzeH+U=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.6 h1:8yTIVnZgCoiM1TgqoeTl+LfU5Jg6/xL3QhGQnimLYnA=

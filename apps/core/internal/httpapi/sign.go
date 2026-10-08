@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lalternativefabrique/vvaves/signed"
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 )
 
 // SigningIssuer names vvaves itself as the signer of a URL: a customer key is
@@ -69,9 +69,13 @@ func handleSign(d Deps) http.HandlerFunc {
 			return
 		}
 		expires := time.Now().Add(SigningTTL)
-		q := signed.Sign(SigningIssuer, d.SigningSecret, signed.Params{
+		q, err := signed.Sign(SigningIssuer, d.SigningSecret, signed.Params{
 			Scope: ar.Scope, ID: ar.ID, TextHash: signed.HashText(ar.Text), Expires: expires,
 		})
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		writeJSON(w, http.StatusOK, signResponse{
 			URL:       publicBase(r, d.PublicURL) + speakPath + "?" + q.Encode(),
 			ExpiresAt: time.Unix(expires.Unix(), 0).UTC(),

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
-	"github.com/lalternativefabrique/vvaves/signed"
 )
 
 const (
@@ -20,7 +20,12 @@ func guardedDeps(t *testing.T) httpapi.Deps {
 	t.Helper()
 	d := audioDeps(&stubVoice{pieces: [][]byte{[]byte("aaa"), []byte("bb")}}, newMemStore())
 	d.Unguarded = false
-	d.Verifier = signed.NewVerifier(map[string]string{testIssuer: testKey})
+	d.Verifier = signed.NewLookupVerifier(func(issuer string) []string {
+		if issuer == testIssuer {
+			return []string{testKey}
+		}
+		return nil
+	})
 	d.AppKeyIssuer = func(key string) (string, bool) {
 		if key == "an-app-key" {
 			return "lalter", true
@@ -31,7 +36,7 @@ func guardedDeps(t *testing.T) httpapi.Deps {
 }
 
 func signedQuery(path, scope, id, text string, expires time.Time) string {
-	q := signed.Sign(testIssuer, testKey, signed.Params{
+	q, _ := signed.Sign(testIssuer, testKey, signed.Params{
 		Scope: scope, ID: id, TextHash: signed.HashText(text), Expires: expires,
 	})
 	return path + "?" + q.Encode()

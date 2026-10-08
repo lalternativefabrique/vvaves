@@ -44,6 +44,7 @@ import (
 	"github.com/lalternative/packages/go/websession"
 	"github.com/nats-io/nats.go"
 
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
@@ -53,7 +54,6 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
 	"github.com/lalternativefabrique/vvaves/core/registry"
 	registryinfra "github.com/lalternativefabrique/vvaves/core/registry/infrastructure"
-	"github.com/lalternativefabrique/vvaves/signed"
 )
 
 func main() {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/lalternative/packages/go/audioreader"
 
-	"github.com/lalternativefabrique/vvaves/signed"
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 )
 
 type speakRequest struct {
