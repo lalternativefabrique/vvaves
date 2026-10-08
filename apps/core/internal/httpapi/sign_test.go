@@ -99,3 +99,10 @@ func TestSignWithoutASecretIsUnavailable(t *testing.T) {
 		t.Fatalf("status = %d, want 503", rec.Code)
 	}
 }
+
+func TestSignRefusesAnIDTheSignatureCannotSeparate(t *testing.T) {
+	rec := postBearer(t, signingDeps(t), "/speak/sign", customerKey, `{"text":"hi","scope":"s","id":"a\nscope=b"}`)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400 (body %q)", rec.Code, rec.Body.String())
+	}
+}

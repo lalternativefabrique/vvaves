@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // Params are the fields a signature covers.
@@ -99,7 +100,26 @@ var (
 	ErrUnknownIssue = fmt.Errorf("signed: unknown issuer")
 	ErrExpired      = fmt.Errorf("signed: signature expired")
 	ErrBadSignature = fmt.Errorf("signed: signature does not match")
+	ErrInvalidField = fmt.Errorf("signed: scope and id must hold no control character")
 )
+
+// MaxFieldLen bounds scope and id.
+const MaxFieldLen = 256
+
+// Validate refuses a scope or id the canonical form could not tell apart from
+// another: the signed string is newline-joined, so a value carrying one could
+// be re-split into different fields under the same MAC.
+func (p Params) Validate() error {
+	for _, v := range []string{p.Scope, p.ID} {
+		if len(v) > MaxFieldLen {
+			return fmt.Errorf("%w: longer than %d bytes", ErrInvalidField, MaxFieldLen)
+		}
+		if strings.IndexFunc(v, unicode.IsControl) >= 0 {
+			return ErrInvalidField
+		}
+	}
+	return nil
+}
 
 // Query names the parameters a signed URL carries.
 const (
@@ -131,6 +151,9 @@ func (v *Verifier) Verify(q url.Values, scope, id, text string) error {
 		return ErrBadSignature
 	}
 	expires := time.Unix(unix, 0)
+	if (Params{Scope: scope, ID: id}).Validate() != nil {
+		return ErrBadSignature
+	}
 
 	// Constant time: a byte-by-byte comparison leaks how much of a guess was
 	// right, which is enough to find the rest one byte at a time.
@@ -188,9 +211,8 @@ func HashText(text string) string {
 
 // sign builds the MAC over the canonical form of p.
 //
-// The fields are joined with a separator that cannot appear in the values
-// being joined, so no two different sets of parameters can produce the same
-// string to sign — "a" + "bc" and "ab" + "c" must not collide.
+// Unambiguous only for fields Validate accepts: the text is a hex hash and
+// exp an integer, and scope and id are refused when they carry a newline.
 func sign(key []byte, p Params) string {
 	fields := []string{
 		"scope=" + p.Scope,

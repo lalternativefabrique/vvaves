@@ -5,6 +5,19 @@
  */
 export const FRAMES_CONTENT_TYPE = 'application/x-lalter-audio-frames'
 
+/** Bounds one piece: the length prefix is four bytes the server chose. */
+export const MAX_FRAME_BYTES = 8 << 20
+
+export class FrameTooLargeError extends Error {
+  readonly frameLength: number
+
+  constructor(frameLength: number) {
+    super(`streamed frame of ${frameLength} bytes exceeds ${MAX_FRAME_BYTES}`)
+    this.name = 'FrameTooLargeError'
+    this.frameLength = frameLength
+  }
+}
+
 /**
  * Reads length-prefixed frames off a byte stream as they arrive, handing
  * each complete frame to onFrame as soon as it is fully buffered. A frame can
@@ -34,6 +47,10 @@ export async function readFrames(
       if (buffer.length < 4) break
       const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.length)
       const frameLength = view.getUint32(0)
+      if (frameLength > MAX_FRAME_BYTES) {
+        await reader.cancel()
+        throw new FrameTooLargeError(frameLength)
+      }
       const total = 4 + frameLength
       if (buffer.length < total) break
       onFrame(buffer.subarray(4, total))

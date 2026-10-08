@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFrames } from './frames.ts'
+import { FrameTooLargeError, MAX_FRAME_BYTES, readFrames } from './frames.ts'
 
 function frame(payload: string): Uint8Array {
   const body = new TextEncoder().encode(payload)
@@ -51,4 +51,10 @@ test('aborting stops before the next read', async () => {
   const got: string[] = []
   await readFrames(streamOf([frame('one')]), (f) => got.push(new TextDecoder().decode(f)), controller.signal)
   assert.deepEqual(got, [])
+})
+
+test('a length prefix past the ceiling stops the read instead of buffering it', async () => {
+  const header = new Uint8Array(4)
+  new DataView(header.buffer).setUint32(0, MAX_FRAME_BYTES + 1)
+  await assert.rejects(collect([header]), FrameTooLargeError)
 })
