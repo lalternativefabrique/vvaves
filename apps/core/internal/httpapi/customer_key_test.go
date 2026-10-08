@@ -22,7 +22,7 @@ func (s *stubCustomerKeys) Verify(_ context.Context, _ string, scopes ...string)
 	return svcauth.Claims{}, s.err
 }
 
-const customerKey = "vvaves_key_eyJhbGciOiJSUzI1NiJ9.e30.sig"
+const customerKey = "vvaves_key_eyJhbGciOiJSUzI1NiJ9.e30.sig" // gitleaks:allow fake key, verified by a stub
 
 const speakBody = `{"text":"` + longText + `","scope":"chat","id":"m1"}`
 
