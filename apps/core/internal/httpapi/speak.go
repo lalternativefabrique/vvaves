@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/lalternative/packages/go/audioreader"
+
+	"github.com/lalternativefabrique/vvaves/signed"
 )
 
 type speakRequest struct {
@@ -95,6 +97,10 @@ func decodeSpeak(w http.ResponseWriter, r *http.Request) (speakRequest, bool) {
 	}
 	if req.Text == "" {
 		writeError(w, http.StatusBadRequest, "text is required")
+		return req, false
+	}
+	if err := (signed.Params{Scope: req.Scope, ID: req.ID}).Validate(); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return req, false
 	}
 	return req, true

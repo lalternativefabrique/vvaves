@@ -1,6 +1,6 @@
 {
   "name": "@lalternative/vvaves-sdk-react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React hook that plays a vvaves reading in the browser, straight from vvaves on a URL the application signed",
   "type": "module",
   "main": "./dist/index.js",

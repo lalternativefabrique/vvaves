@@ -82,6 +82,9 @@ func NewSigner(cfg SignerConfig) *Signer {
 // signature derived from one: for such a key vvaves signs the URL itself.
 // Any other key signs locally, as URL does.
 func (s *Signer) Sign(ctx context.Context, scope, id, text string) (string, time.Time, error) {
+	if err := (Params{Scope: scope, ID: id}).Validate(); err != nil {
+		return "", time.Time{}, err
+	}
 	if !strings.HasPrefix(s.key, client.CustomerKeyPrefix) {
 		u, expires := s.URL(scope, id, text)
 		return u, expires, nil

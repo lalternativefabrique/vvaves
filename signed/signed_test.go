@@ -3,6 +3,7 @@ package signed
 import (
 	"errors"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -209,5 +210,22 @@ func TestLookupVerifierAcceptsEveryCurrentSecret(t *testing.T) {
 	delete(keys, issuer)
 	if err := v.Verify(fresh, "s", "id", "text"); !errors.Is(err, ErrUnknownIssue) {
 		t.Fatalf("revoked issuer: err = %v, want ErrUnknownIssue", err)
+	}
+}
+
+func TestFieldsTheCanonicalFormCannotSeparateAreRefused(t *testing.T) {
+	v := NewVerifier(map[string]string{"app": "k"})
+	exp := time.Now().Add(time.Minute)
+	q := Sign("app", "k", Params{Scope: "a\nid=b", TextHash: HashText("x"), Expires: exp})
+	if err := v.Verify(q, "a\nid=b", "", "x"); !errors.Is(err, ErrBadSignature) {
+		t.Errorf("newline in scope: %v, want ErrBadSignature", err)
+	}
+	for _, p := range []Params{{ID: "x\x00"}, {Scope: strings.Repeat("s", MaxFieldLen+1)}} {
+		if !errors.Is(p.Validate(), ErrInvalidField) {
+			t.Errorf("Validate(%q,%q) accepted", p.Scope, p.ID)
+		}
+	}
+	if err := (Params{Scope: "synthiz", ID: "reply-42"}).Validate(); err != nil {
+		t.Errorf("ordinary fields refused: %v", err)
 	}
 }
