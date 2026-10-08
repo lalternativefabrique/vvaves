@@ -18,6 +18,7 @@ services:
     depends_on: [migrate, postgres, searxng, tts, nats]
     env:
       LISTEN_ADDR: ":8080"
+      SPEAK_PUBLIC_URL: https://vvaves.dev
       DATABASE_URL: postgres://vvaves:${POSTGRES_PASSWORD}@postgres:5432/vvaves?sslmode=disable
       REGISTRY_ENCRYPTION_KEY: ${REGISTRY_ENCRYPTION_KEY}
       OIDC_ISSUER_URL: https://id.urbangate.dev
