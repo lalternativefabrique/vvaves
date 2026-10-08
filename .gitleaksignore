@@ -1,0 +1,2 @@
+# Reviewed false positives (commit:file:rule:line). Never add a real secret here: revoke it.
+f1390bde3007970f92906ced4ebc20f74445bcbd:apps/core/internal/httpapi/customer_key_test.go:generic-api-key:25
