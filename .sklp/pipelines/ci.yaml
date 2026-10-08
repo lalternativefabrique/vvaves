@@ -15,11 +15,6 @@ on:
 scopes:
   facade:
     - "apps/core/**"
-    - "client/**"
-    - "signed/**"
-    - "go.work"
-    - "go.mod"
-    - "go.sum"
     - "Dockerfile"
   migrate:
     - "apps/migrations/**"
@@ -49,9 +44,10 @@ steps:
     scope: [facade]
     tools: [go]
     run: |
-      go build ./... ./apps/core/...
-      go vet ./... ./apps/core/...
-      go test ./... ./apps/core/...
+      cd apps/core
+      go build ./...
+      go vet ./...
+      go test ./...
 
   # The served contract is what every consumer generates its client from, so a
   # handler changed without regenerating would hand them a spec describing

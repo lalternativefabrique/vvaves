@@ -242,18 +242,17 @@ compile error where it used to get a 404.
 
 ## Clients
 
-This module ships both halves of that arrangement, so an application does not
-rewrite the contract:
+Both live in the [packages](https://github.com/lalternativefabrique/packages)
+repo, so an application does not rewrite the contract:
 
-- `client` (Go) is a `tts.Voice` that speaks through vvaves. `client.New`
-  takes the `Key` for server-to-server calls; `PrimeOpening`,
-  `Pregenerate`, `Exists` and the `*Named` variants map onto the routes above.
-- `signed` (Go) holds the signature scheme. `signed.NewSigner` mints the URL
-  the application hands its browser; vvaves verifies with the same package.
+- [`vvaves/sdk-go`](https://github.com/lalternativefabrique/packages/tree/main/vvaves/sdk-go)
+  calls vvaves server to server (`Speak`, `SpeakStream`, `Exists`, `Prime`,
+  `Pregenerate`, `Transcribe`) and mints the URL a browser plays (`Sign`).
+  Its `signed` subpackage is the signature scheme; this server verifies with
+  it too.
 - [`@lalternative/vvaves-sdk-react`](https://github.com/lalternativefabrique/packages/tree/main/vvaves/sdk-react)
-  (in the packages repo, beside `vvaves/sdk-go`) plays a signed reading
-  in the browser: `speakSource` builds the request, `useVoicePlayback`
-  streams and decodes it.
+  plays a signed reading in the browser: `speakSource` builds the request,
+  `useVoicePlayback` streams and decodes it.
 
 ## Running it
 

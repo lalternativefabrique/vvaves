@@ -1,12 +1,7 @@
 FROM golang:1.26-bookworm AS build
 WORKDIR /src
-COPY go.work go.work.sum go.mod go.sum ./
 COPY apps/core/go.mod apps/core/go.sum ./apps/core/
 RUN cd apps/core && go mod download
-# client/ and signed/ are the root module: the applications that speak
-# through vvaves import them, and the server does too.
-COPY client/ client/
-COPY signed/ signed/
 COPY apps/core/ apps/core/
 RUN cd apps/core && CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/vvaves .
 
