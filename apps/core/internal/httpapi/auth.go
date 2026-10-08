@@ -9,11 +9,11 @@ import (
 	"github.com/lalternative/packages/go/appkeys"
 	"github.com/lalternative/packages/go/svcauth"
 
-	"github.com/lalternativefabrique/vvaves/client"
-	"github.com/lalternativefabrique/vvaves/signed"
+	sdk "github.com/lalternative/packages/vvaves/sdk-go"
+	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 )
 
-const HeaderKey = client.HeaderKey
+const HeaderKey = sdk.HeaderKey
 
 // ScopeSpeak is the OAuth2 scope a service's token must carry to have text
 // read: a token meant for another part of the suite must not reach the voice.
