@@ -25,10 +25,15 @@ type Config struct {
 	// API; empty speaks the OpenAI protocol to TTSURL, the self-hosted
 	// speech server.
 	TTSProvider string
-	TTSURL      string
-	TTSAPIKey   string
-	TTSModel    string
-	TTSVoice    string
+	// STTURL, STTAPIKey and STTModel point /transcribe at an
+	// OpenAI-compatible /audio/transcriptions endpoint; no key disables it.
+	STTURL    string
+	STTAPIKey string
+	STTModel  string
+	TTSURL    string
+	TTSAPIKey string
+	TTSModel  string
+	TTSVoice  string
 	// TTSVoices reads a listener in a voice of their language and, when one
 	// is declared for it, of the gender they asked for. TTS_VOICES holds
 	// "lang:voice" and "lang:gender:voice" entries ("fr:abc,fr:male:def"),
@@ -99,6 +104,9 @@ func Load() Config {
 		Addr: env("LISTEN_ADDR", ":8080"),
 
 		TTSProvider: os.Getenv("TTS_PROVIDER"),
+		STTURL:      os.Getenv("STT_URL"),
+		STTAPIKey:   os.Getenv("STT_API_KEY"),
+		STTModel:    os.Getenv("STT_MODEL"),
 		TTSURL:      os.Getenv("PIPER_URL"),
 		TTSAPIKey:   os.Getenv("TTS_API_KEY"),
 		TTSModel:    os.Getenv("TTS_MODEL"),

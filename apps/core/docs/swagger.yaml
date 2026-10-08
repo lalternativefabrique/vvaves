@@ -54,6 +54,11 @@ definitions:
       text:
         type: string
     type: object
+  httpapi.transcribeResponse:
+    properties:
+      text:
+        type: string
+    type: object
   keys.CreateKeyRequest:
     properties:
       label:
@@ -555,6 +560,49 @@ paths:
       summary: Sign a /speak URL a browser can play
       tags:
       - speak
+  /transcribe:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Takes the service credentials /speak/prime takes, under the vvaves:transcribe
+        scope; a signed listener URL is refused.
+      operationId: transcribe
+      parameters:
+      - description: Recording (webm, ogg, m4a, wav, mp3), at most 25 MB
+        in: formData
+        name: audio
+        required: true
+        type: file
+      - description: ISO language code; empty lets the model detect it
+        in: formData
+        name: language
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.transcribeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      summary: Turn a recording into text
+      tags:
+      - transcribe
 securityDefinitions:
   BearerAuth:
     in: header

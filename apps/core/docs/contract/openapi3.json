@@ -699,6 +699,92 @@
                     }
                 }
             }
+        },
+        "/transcribe": {
+            "post": {
+                "description": "Takes the service credentials /speak/prime takes, under the vvaves:transcribe scope; a signed listener URL is refused.",
+                "tags": [
+                    "transcribe"
+                ],
+                "summary": "Turn a recording into text",
+                "operationId": "transcribe",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "audio": {
+                                        "description": "Recording (webm, ogg, m4a, wav, mp3), at most 25 MB",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "language": {
+                                        "description": "ISO language code; empty lets the model detect it",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "audio"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.transcribeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.errorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [
@@ -781,6 +867,14 @@
                     "stream": {
                         "type": "boolean"
                     },
+                    "text": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.transcribeResponse": {
+                "type": "object",
+                "properties": {
                     "text": {
                         "type": "string"
                     }

@@ -19,6 +19,10 @@ const HeaderKey = client.HeaderKey
 // read: a token meant for another part of the suite must not reach the voice.
 const ScopeSpeak = "vvaves:speak"
 
+// ScopeTranscribe is the scope a service's token or customer key must carry
+// to have audio turned into text.
+const ScopeTranscribe = "vvaves:transcribe"
+
 // BearerVerifier checks a token a service obtained from the suite's identity
 // provider. svcauth.Verifier is the one main wires.
 type BearerVerifier interface {
@@ -53,10 +57,10 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 	}
 	if raw, ok := svcauth.BearerToken(r); ok {
 		if strings.HasPrefix(raw, customerKeyPrefix) {
-			return d.guardCustomerKey(r.Context(), raw)
+			return d.guardCustomerKey(r.Context(), raw, ScopeSpeak)
 		}
 		if d.Tokens != nil {
-			return d.guardServiceToken(r.Context(), raw)
+			return d.guardServiceToken(r.Context(), raw, ScopeSpeak)
 		}
 	}
 	if key := r.Header.Get(HeaderKey); key != "" && d.AppKeyIssuer != nil {
@@ -74,7 +78,30 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 	}
 	return d.Verifier.Verify(r.URL.Query(), scope, id, text)
 }
-func (d Deps) guardServiceToken(ctx context.Context, raw string) error {
+
+// guardService admits only a service credential: a signed listener URL buys a
+// reading, never a transcription.
+func (d Deps) guardService(r *http.Request, scope string) error {
+	if d.Unguarded {
+		return nil
+	}
+	if raw, ok := svcauth.BearerToken(r); ok {
+		if strings.HasPrefix(raw, customerKeyPrefix) {
+			return d.guardCustomerKey(r.Context(), raw, scope)
+		}
+		if d.Tokens != nil {
+			return d.guardServiceToken(r.Context(), raw, scope)
+		}
+	}
+	if key := r.Header.Get(HeaderKey); key != "" && d.AppKeyIssuer != nil {
+		if _, ok := d.AppKeyIssuer(key); ok {
+			return nil
+		}
+	}
+	return ErrBadToken
+}
+
+func (d Deps) guardServiceToken(ctx context.Context, raw, scope string) error {
 	claims, err := d.Tokens.Verify(ctx, raw)
 	if errors.Is(err, svcauth.ErrUnavailable) {
 		return ErrIdentityProviderUnavailable
@@ -82,7 +109,7 @@ func (d Deps) guardServiceToken(ctx context.Context, raw string) error {
 	if err != nil {
 		return ErrBadToken
 	}
-	if !claims.HasScope(ScopeSpeak) {
+	if !claims.HasScope(scope) {
 		return ErrTokenLacksScope
 	}
 	return nil
@@ -92,11 +119,11 @@ func (d Deps) guardServiceToken(ctx context.Context, raw string) error {
 // ErrRevocationUnknown, never with a refusal: no list, or a list too old, says
 // nothing about the key, and telling a customer their valid key is invalid
 // sends them rotating it during an outage.
-func (d Deps) guardCustomerKey(ctx context.Context, raw string) error {
+func (d Deps) guardCustomerKey(ctx context.Context, raw, scope string) error {
 	if d.CustomerKeys == nil {
 		return ErrRevocationUnknown
 	}
-	_, err := d.CustomerKeys.Verify(ctx, raw, ScopeSpeak)
+	_, err := d.CustomerKeys.Verify(ctx, raw, scope)
 	switch {
 	case err == nil:
 		return nil
@@ -130,7 +157,7 @@ var ErrNoGuard = errors.New("speak: no key configured, and not unguarded")
 var ErrBadToken = errors.New("speak: bearer token refused")
 
 // ErrTokenLacksScope is a valid token that was not granted the speak scope.
-var ErrTokenLacksScope = errors.New("speak: token lacks the " + ScopeSpeak + " scope")
+var ErrTokenLacksScope = errors.New("speak: token lacks the required scope")
 
 // ErrIdentityProviderUnavailable is a credential that could not be checked
 // because urbangate's keys could not be read: the caller retries, it does not

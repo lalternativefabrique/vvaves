@@ -47,6 +47,7 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
+	"github.com/lalternativefabrique/vvaves/core/internal/stt"
 	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
@@ -90,6 +91,11 @@ func main() {
 		Unguarded:     cfg.SpeakUnguarded,
 		SigningSecret: signingSecret,
 		PublicURL:     cfg.SpeakPublicURL,
+	}
+	if whisper := stt.New(stt.Config{URL: cfg.STTURL, APIKey: cfg.STTAPIKey, Model: cfg.STTModel}); whisper != nil {
+		deps.Transcriber = whisper
+	} else {
+		log.Print("vvaves: STT_API_KEY is unset, /transcribe answers 503")
 	}
 	if cfg.SpeakUnguarded {
 		log.Print("vvaves: SPEAK_UNGUARDED, the speak routes answer anyone who reaches them")

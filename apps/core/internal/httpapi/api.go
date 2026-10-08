@@ -54,6 +54,8 @@ type Deps struct {
 	SigningSecret string
 	// PublicURL is the origin those URLs point at. Empty takes the request's.
 	PublicURL string
+	// Transcriber turns recordings into text. Nil answers /transcribe 503.
+	Transcriber Transcriber
 }
 
 type Voice struct {
@@ -71,6 +73,7 @@ func New(d Deps) *http.ServeMux {
 	mux.Handle("POST /speak/pregenerate", handlePregenerate(d))
 	mux.Handle("POST /speak/exists", handleExists(d))
 	mux.Handle("POST /speak/sign", handleSign(d))
+	mux.Handle("POST /transcribe", handleTranscribe(d))
 	return mux
 }
 
