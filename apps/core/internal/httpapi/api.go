@@ -49,6 +49,11 @@ type Deps struct {
 	// deployment reachable only from inside the cluster, or a laptop. It has
 	// to be said; a vvaves that forgot its keys must refuse, not serve.
 	Unguarded bool
+	// SigningSecret signs the URLs /speak/sign hands out under
+	// SigningIssuer. Empty refuses to sign.
+	SigningSecret string
+	// PublicURL is the origin those URLs point at. Empty takes the request's.
+	PublicURL string
 }
 
 type Voice struct {
@@ -65,6 +70,7 @@ func New(d Deps) *http.ServeMux {
 	mux.Handle("POST /speak/prime", handlePrime(d))
 	mux.Handle("POST /speak/pregenerate", handlePregenerate(d))
 	mux.Handle("POST /speak/exists", handleExists(d))
+	mux.Handle("POST /speak/sign", handleSign(d))
 	return mux
 }
 

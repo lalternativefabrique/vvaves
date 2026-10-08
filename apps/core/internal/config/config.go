@@ -85,6 +85,13 @@ type Config struct {
 	// 32-byte key. Required with a database: a registry that stores secrets
 	// in the clear is one that must not start.
 	RegistryEncryptionKey string
+	// SpeakSigningSecret signs the /speak URLs vvaves hands out for customer
+	// keys, read from SPEAK_SIGNING_SECRET. Empty derives one from
+	// RegistryEncryptionKey.
+	SpeakSigningSecret string
+	// SpeakPublicURL is the origin browsers reach /speak on, read from
+	// SPEAK_PUBLIC_URL. Empty takes it from the request's Host.
+	SpeakPublicURL string
 }
 
 func Load() Config {
@@ -127,6 +134,8 @@ func Load() Config {
 		SuiteNATSPassword:     os.Getenv("SUITE_NATS_PASSWORD"),
 		RegistryEncryptionKey: os.Getenv("REGISTRY_ENCRYPTION_KEY"),
 		SpeakUnguarded:        os.Getenv("SPEAK_UNGUARDED") == "true",
+		SpeakSigningSecret:    os.Getenv("SPEAK_SIGNING_SECRET"),
+		SpeakPublicURL:        os.Getenv("SPEAK_PUBLIC_URL"),
 		OIDCIssuerURL:         os.Getenv("OIDC_ISSUER_URL"),
 		OIDCAudience:          envString("OIDC_AUDIENCE", "vvaves"),
 
