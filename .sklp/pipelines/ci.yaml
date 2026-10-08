@@ -7,6 +7,7 @@ tools:
   node: "24.16.0"
   pnpm: "10.27.0"
   rust: "1.93.0"
+  gitleaks: "8.18.4"
 
 on:
   branches: ['**', '!main']
@@ -33,6 +34,17 @@ scopes:
     - "Dockerfile.tts"
 
 steps:
+  # Unscoped: a key can land in any file. This repository is public, so a
+  # secret that reaches main is published and must be revoked, not deleted.
+  - name: gitleaks
+    tools: [gitleaks]
+    run: |
+      if git rev-parse --git-dir >/dev/null 2>&1; then
+        gitleaks detect --source . --config .gitleaks.toml --no-banner --redact --exit-code 1
+      else
+        gitleaks detect --no-git --source . --config .gitleaks.toml --no-banner --redact --exit-code 1
+      fi
+
   - name: facade-test
     scope: [facade]
     tools: [go]

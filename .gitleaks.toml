@@ -1,0 +1,4 @@
+title = "vvaves gitleaks config"
+
+[extend]
+useDefault = true
