@@ -550,6 +550,67 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/speak/sign": {
+            "post": {
+                "security": [
+                    {
+                        "ServiceKey": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "For an application holding a customer key, which cannot sign\nURLs itself. Takes a server credential, never a signature.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "speak"
+                ],
+                "summary": "Sign a /speak URL a browser can play",
+                "operationId": "signSpeak",
+                "parameters": [
+                    {
+                        "description": "reading to authorise",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.speakRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.signResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -574,6 +635,17 @@ const docTemplate = `{
             "properties": {
                 "ok": {
                     "type": "boolean"
+                }
+            }
+        },
+        "httpapi.signResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },

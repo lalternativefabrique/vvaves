@@ -25,7 +25,8 @@ type Config struct {
 	// Key authenticates server-to-server calls on a vvaves reachable from
 	// the internet, where a signature only ever buys one listen. It is the
 	// same key signed.NewSigner takes. Empty sends nothing, which an
-	// internal-only vvaves accepts.
+	// internal-only vvaves accepts. A key carrying CustomerKeyPrefix is sent
+	// as a bearer token instead.
 	Key string
 	// Authorize attaches a bearer token from the suite's identity provider
 	// to each call, svcauth.ClientCredentials.Authorize typically. Set, it
@@ -38,6 +39,10 @@ type Config struct {
 
 // HeaderKey carries Key; the server reads the same name.
 const HeaderKey = "X-Vvaves-Key"
+
+// CustomerKeyPrefix marks a key urbangate issued: vvaves verifies those as a
+// bearer credential, never on HeaderKey.
+const CustomerKeyPrefix = "vvaves_key_"
 
 // Voice reads text through vvaves instead of a speech service directly.
 // Vvaves owns the synthesis, the cache and the store, so every application
@@ -228,6 +233,8 @@ func (v *Voice) post(ctx context.Context, path string, payload map[string]any) (
 		if err := v.cfg.Authorize(req); err != nil {
 			return nil, fmt.Errorf("tts: authorize: %w", err)
 		}
+	} else if strings.HasPrefix(v.cfg.Key, CustomerKeyPrefix) {
+		req.Header.Set("Authorization", "Bearer "+v.cfg.Key)
 	} else if v.cfg.Key != "" {
 		req.Header.Set(HeaderKey, v.cfg.Key)
 	}

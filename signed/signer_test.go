@@ -1,6 +1,9 @@
 package signed
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -78,5 +81,49 @@ func TestPublicOriginDropsThePath(t *testing.T) {
 	var none *Signer
 	if got := none.PublicOrigin(); got != "" {
 		t.Errorf("nil signer origin = %q, want empty", got)
+	}
+}
+
+func TestSignSendsACustomerKeyToVvaves(t *testing.T) {
+	const customer = "vvaves_key_abc.def.ghi"
+	var gotAuth, gotPath string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAuth, gotPath = r.Header.Get("Authorization"), r.URL.Path
+		w.Write([]byte(`{"url":"https://audio.example/speak?iss=vvaves","expires_at":"2030-01-01T00:00:00Z"}`))
+	}))
+	defer srv.Close()
+	s := NewSigner(SignerConfig{PublicURL: "https://audio.example", InternalURL: srv.URL, Key: customer})
+	u, exp, err := s.Sign(context.Background(), "chat", "m1", "bonjour")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotAuth != "Bearer "+customer || gotPath != "/speak/sign" {
+		t.Fatalf("auth = %q, path = %q", gotAuth, gotPath)
+	}
+	if u != "https://audio.example/speak?iss=vvaves" || exp.Year() != 2030 {
+		t.Fatalf("url = %q, expires = %v", u, exp)
+	}
+}
+
+func TestSignReportsARefusal(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	defer srv.Close()
+	s := NewSigner(SignerConfig{PublicURL: srv.URL, Key: "vvaves_key_x"})
+	if _, _, err := s.Sign(context.Background(), "chat", "m1", "bonjour"); err == nil {
+		t.Fatal("want an error")
+	}
+}
+
+func TestSignKeepsALocalKeyLocal(t *testing.T) {
+	s := NewSigner(SignerConfig{PublicURL: "http://127.0.0.1:1", Issuer: issuer, Key: key})
+	u, _, err := s.Sign(context.Background(), "chat", "m1", "bonjour")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, _ := url.Parse(u)
+	if err := NewVerifier(map[string]string{issuer: key}).Verify(parsed.Query(), "chat", "m1", "bonjour"); err != nil {
+		t.Fatalf("local signature: %v", err)
 	}
 }

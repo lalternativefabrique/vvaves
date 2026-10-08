@@ -18,6 +18,9 @@ package main
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"log"
 	"log/slog"
@@ -75,15 +78,18 @@ func main() {
 	defer stopLifecycle()
 
 	customerKeys := buildCustomerKeys(cfg)
+	signingSecret := speakSigningSecret(cfg)
 	deps := httpapi.Deps{
-		Reader:       speech.Reader,
-		Primer:       speech.Primer,
-		Voices:       voices,
-		Verifier:     signed.NewLookupVerifier(keys.Keys),
-		AppKeyIssuer: keys.IssuerOf,
-		Tokens:       buildTokens(cfg),
-		CustomerKeys: customerKeyVerifier(customerKeys),
-		Unguarded:    cfg.SpeakUnguarded,
+		Reader:        speech.Reader,
+		Primer:        speech.Primer,
+		Voices:        voices,
+		Verifier:      signed.NewLookupVerifier(httpapi.WithSigningIssuer(keys.Keys, signingSecret)),
+		AppKeyIssuer:  keys.IssuerOf,
+		Tokens:        buildTokens(cfg),
+		CustomerKeys:  customerKeyVerifier(customerKeys),
+		Unguarded:     cfg.SpeakUnguarded,
+		SigningSecret: signingSecret,
+		PublicURL:     cfg.SpeakPublicURL,
 	}
 	if cfg.SpeakUnguarded {
 		log.Print("vvaves: SPEAK_UNGUARDED, the speak routes answer anyone who reaches them")
@@ -446,4 +452,18 @@ func cacheNamespace(cfg config.Config, voiceID, lang string) string {
 		ns += lang + "/"
 	}
 	return ns
+}
+
+// speakSigningSecret falls back to a secret derived from the registry's key,
+// under its own label, so a deployment signs without a new secret to manage.
+func speakSigningSecret(cfg config.Config) string {
+	if cfg.SpeakSigningSecret != "" {
+		return cfg.SpeakSigningSecret
+	}
+	if cfg.RegistryEncryptionKey == "" {
+		return ""
+	}
+	mac := hmac.New(sha256.New, []byte(cfg.RegistryEncryptionKey))
+	mac.Write([]byte("vvaves/speak-signing/v1"))
+	return hex.EncodeToString(mac.Sum(nil))
 }

@@ -313,6 +313,25 @@ func TestAuthorizeReplacesTheAppKey(t *testing.T) {
 	}
 }
 
+func TestCustomerKeyGoesAsBearer(t *testing.T) {
+	var auth, key string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth = r.Header.Get("Authorization")
+		key = r.Header.Get(HeaderKey)
+		w.Header().Set("Content-Type", "audio/mpeg")
+		w.Write([]byte("audio"))
+	}))
+	defer srv.Close()
+
+	v := New(Config{BaseURL: srv.URL, Key: CustomerKeyPrefix + "jwt"})
+	if _, _, err := v.Speak(context.Background(), "bonjour"); err != nil {
+		t.Fatal(err)
+	}
+	if auth != "Bearer "+CustomerKeyPrefix+"jwt" || key != "" {
+		t.Fatalf("Authorization=%q %s=%q, want the customer key as bearer only", auth, HeaderKey, key)
+	}
+}
+
 func TestAuthorizeFailureStopsTheCall(t *testing.T) {
 	called := false
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { called = true }))
