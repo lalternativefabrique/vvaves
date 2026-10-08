@@ -18,11 +18,6 @@ registries:
 scopes:
   app:
     - "apps/core/**"
-    - "client/**"
-    - "signed/**"
-    - "go.work"
-    - "go.mod"
-    - "go.sum"
     - "Dockerfile"
   web:
     - "apps/web/**"
