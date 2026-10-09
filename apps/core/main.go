@@ -174,7 +174,7 @@ func buildCustomerKeys(cfg config.Config) *appkeys.Keys {
 			[]string{"urbangate"},
 			[]string{"urbangate:keys:issue"},
 		),
-		DefaultScopes: []string{httpapi.ScopeSpeak},
+		DefaultScopes: []string{httpapi.ScopeSpeak, httpapi.ScopeTranscribe},
 		OwnerOf:       ownerOfSession,
 	})
 	if err != nil {
