@@ -17,7 +17,7 @@ it with one key per application (ADR 0002).
 
 vvaves serves `POST /transcribe`: a multipart recording in, `{text}` out,
 through an OpenAI-compatible `/audio/transcriptions` endpoint set by
-`STT_URL`, `STT_API_KEY` and `STT_MODEL` (Whisper on OVH by default).
+`STT_URL`, `STT_API_KEY` and `STT_MODEL` (Whisper on Scaleway Generative APIs by default).
 
 It accepts the service credentials `/speak/prime` accepts, under a scope of
 its own, `vvaves:transcribe`, so a token or customer key granted reading is

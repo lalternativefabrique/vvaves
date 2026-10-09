@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	DefaultURL   = "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/audio/transcriptions"
-	DefaultModel = "whisper-large-v3-turbo"
+	DefaultURL   = "https://api.scaleway.ai/v1/audio/transcriptions"
+	DefaultModel = "whisper-large-v3"
 )
 
 type Config struct {
