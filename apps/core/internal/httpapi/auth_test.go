@@ -26,12 +26,7 @@ func guardedDeps(t *testing.T) httpapi.Deps {
 		}
 		return nil
 	})
-	d.AppKeyIssuer = func(key string) (string, bool) {
-		if key == "an-app-key" {
-			return "lalter", true
-		}
-		return "", false
-	}
+	d.Tokens = stubTokens{"a-service-token": {Subject: "lalter", Scopes: []string{httpapi.ScopeSpeak, httpapi.ScopeTranscribe}}}
 	return d
 }
 
@@ -113,12 +108,12 @@ func TestSpeakReportsAnExpiredSignatureAs401(t *testing.T) {
 	}
 }
 
-// A service on the cluster's own network authenticates as itself, with no
-// signature to make: it is not handing a browser anything.
-func TestSpeakAcceptsAnAppKey(t *testing.T) {
+// A service authenticates as itself, with no signature to make: it is not
+// handing a browser anything.
+func TestSpeakAcceptsAServiceToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/speak", strings.NewReader(`{"text":"`+longText+`","scope":"chat","id":"m1"}`))
-	req.Header.Set(httpapi.HeaderKey, "an-app-key")
+	req.Header.Set("Authorization", "Bearer a-service-token")
 	httpapi.New(guardedDeps(t)).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
@@ -126,10 +121,10 @@ func TestSpeakAcceptsAnAppKey(t *testing.T) {
 	}
 }
 
-func TestSpeakRejectsAnUnknownAppKey(t *testing.T) {
+func TestSpeakRejectsAnUnknownToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/speak", strings.NewReader(`{"text":"bonjour","scope":"chat","id":"m1"}`))
-	req.Header.Set(httpapi.HeaderKey, "not-a-key")
+	req.Header.Set("Authorization", "Bearer not-a-token")
 	httpapi.New(guardedDeps(t)).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusForbidden {
@@ -179,13 +174,12 @@ func TestASignatureDoesNotReachPregenerate(t *testing.T) {
 	}
 }
 
-// Exists reads no bytes and starts no synthesis, but it is still about
-// someone's own conversation, so a browser reaches it the same way it reaches
-// /speak — with an app key, since its signature is only good for /speak.
-func TestPrimeStillAcceptsAnAppKey(t *testing.T) {
+// Prime takes the service's own credential: a browser's signature is only
+// good for /speak.
+func TestPrimeStillAcceptsAServiceToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/speak/prime", strings.NewReader(`{"text":"`+longText+`","scope":"chat","id":"m1"}`))
-	req.Header.Set(httpapi.HeaderKey, "an-app-key")
+	req.Header.Set("Authorization", "Bearer a-service-token")
 	httpapi.New(guardedDeps(t)).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusAccepted {

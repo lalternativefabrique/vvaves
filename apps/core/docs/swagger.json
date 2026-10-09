@@ -323,9 +323,6 @@
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -384,9 +381,6 @@
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -437,9 +431,6 @@
         "/speak/pregenerate": {
             "post": {
                 "security": [
-                    {
-                        "ServiceKey": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -493,9 +484,6 @@
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -547,9 +535,6 @@
         "/speak/sign": {
             "post": {
                 "security": [
-                    {
-                        "ServiceKey": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -910,11 +895,6 @@
         "BearerAuth": {
             "type": "apiKey",
             "name": "Authorization",
-            "in": "header"
-        },
-        "ServiceKey": {
-            "type": "apiKey",
-            "name": "X-Vvaves-Key",
             "in": "header"
         }
     }

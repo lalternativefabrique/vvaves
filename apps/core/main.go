@@ -11,9 +11,6 @@
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-// @securityDefinitions.apikey ServiceKey
-// @in header
-// @name X-Vvaves-Key
 package main
 
 import (
@@ -85,7 +82,6 @@ func main() {
 		Primer:        speech.Primer,
 		Voices:        voices,
 		Verifier:      signed.NewLookupVerifier(httpapi.WithSigningIssuer(keys.Keys, signingSecret)),
-		AppKeyIssuer:  keys.IssuerOf,
 		Tokens:        buildTokens(cfg),
 		CustomerKeys:  customerKeyVerifier(customerKeys),
 		Unguarded:     cfg.SpeakUnguarded,

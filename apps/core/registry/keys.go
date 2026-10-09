@@ -33,7 +33,6 @@ type KeySource struct {
 
 	mu        sync.Mutex
 	keys      map[string][]string
-	issuerOf  map[string]string
 	fetchedAt time.Time
 }
 
@@ -45,15 +44,7 @@ func NewKeySource(apps keyLister, cipher opener, env map[string][]string) *KeySo
 
 // Keys are the keys issuer's signatures may verify against now.
 func (k *KeySource) Keys(issuer string) []string {
-	keys, _ := k.snapshot()
-	return keys[issuer]
-}
-
-// IssuerOf names the application holding key, if any.
-func (k *KeySource) IssuerOf(key string) (string, bool) {
-	_, issuerOf := k.snapshot()
-	name, ok := issuerOf[key]
-	return name, ok
+	return k.snapshot()[issuer]
 }
 
 // Invalidate drops the cache, so a registration or rotation is honoured on
@@ -64,15 +55,14 @@ func (k *KeySource) Invalidate() {
 	k.mu.Unlock()
 }
 
-func (k *KeySource) snapshot() (map[string][]string, map[string]string) {
+func (k *KeySource) snapshot() map[string][]string {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	now := k.now()
 	if k.keys != nil && now.Sub(k.fetchedAt) < k.ttl {
-		return k.keys, k.issuerOf
+		return k.keys
 	}
 	keys := map[string][]string{}
-	issuerOf := map[string]string{}
 	if k.apps != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		apps, err := k.apps.List(ctx)
@@ -80,7 +70,7 @@ func (k *KeySource) snapshot() (map[string][]string, map[string]string) {
 		if err != nil {
 			log.Printf("registry: keys not refreshed: %v", err)
 			if k.keys != nil {
-				return k.keys, k.issuerOf
+				return k.keys
 			}
 		}
 		for _, a := range apps {
@@ -99,7 +89,6 @@ func (k *KeySource) snapshot() (map[string][]string, map[string]string) {
 					continue
 				}
 				secrets = append(secrets, s)
-				issuerOf[s] = a.Name
 			}
 			if len(secrets) > 0 {
 				keys[a.Name] = secrets
@@ -111,10 +100,7 @@ func (k *KeySource) snapshot() (map[string][]string, map[string]string) {
 			continue
 		}
 		keys[issuer] = append([]string(nil), secrets...)
-		for _, secret := range secrets {
-			issuerOf[secret] = issuer
-		}
 	}
-	k.keys, k.issuerOf, k.fetchedAt = keys, issuerOf, now
-	return keys, issuerOf
+	k.keys, k.fetchedAt = keys, now
+	return keys
 }
