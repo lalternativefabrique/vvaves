@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAppsRouteImport } from './routes/admin/apps'
+import { Route as AdminVoicesRouteImport } from './routes/admin/voices'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as AppKeysRouteImport } from './routes/app/keys'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
@@ -78,6 +79,11 @@ const AdminAppsRoute = AdminAppsRouteImport.update({
   path: '/apps',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminVoicesRoute = AdminVoicesRouteImport.update({
+  id: '/voices',
+  path: '/voices',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin_/login',
   path: '/admin/login',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
+  '/admin/voices': typeof AdminVoicesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
+  '/admin/voices': typeof AdminVoicesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
+  '/admin/voices': typeof AdminVoicesRoute
   '/admin_/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
+    | '/admin/voices'
     | '/admin/login'
     | '/app/keys'
     | '/app/settings'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
+    | '/admin/voices'
     | '/admin/login'
     | '/app/keys'
     | '/app/settings'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
+    | '/admin/voices'
     | '/admin_/login'
     | '/app/keys'
     | '/app/settings'
@@ -330,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/voices': {
+      id: '/admin/voices'
+      path: '/voices'
+      fullPath: '/admin/voices'
+      preLoaderRoute: typeof AdminVoicesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin_/login': {
       id: '/admin_/login'
       path: '/admin/login'
@@ -391,11 +410,13 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAppsRoute: typeof AdminAppsRoute
+  AdminVoicesRoute: typeof AdminVoicesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAppsRoute: AdminAppsRoute,
+  AdminVoicesRoute: AdminVoicesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -432,12 +453,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
