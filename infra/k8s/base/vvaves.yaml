@@ -31,6 +31,13 @@ spec:
       labels:
         app: vvaves
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       imagePullSecrets:
         - name: scw-registry-credentials
       containers:
@@ -121,13 +128,26 @@ spec:
               memory: 1536Mi
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             # Chromium writes its shared memory here; the container's default
             # /dev/shm is 64Mi, which a real page blows through.
             - name: dshm
               mountPath: /dev/shm
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/vvaves
       volumes:
         - name: dshm
           emptyDir:
             medium: Memory
+            sizeLimit: 256Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: home
+          emptyDir:
             sizeLimit: 256Mi
