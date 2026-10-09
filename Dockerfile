@@ -29,9 +29,9 @@ RUN apt-get update \
 
 # This service renders arbitrary third-party JavaScript; a compromised render
 # should not run as root in its own container.
-RUN groupadd -r vvaves && useradd -r -g vvaves -G audio,video vvaves \
+RUN groupadd -r -g 10001 vvaves && useradd -r -u 10001 -g vvaves -G audio,video vvaves \
     && mkdir -p /home/vvaves && chown -R vvaves:vvaves /home/vvaves /app
-USER vvaves
+USER 10001:10001
 
 # chromedp looks for a browser on PATH; the Playwright image keeps its
 # Chromium under /ms-playwright instead.
