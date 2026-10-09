@@ -46,6 +46,7 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
 	"github.com/lalternativefabrique/vvaves/core/internal/stt"
+	"github.com/lalternativefabrique/vvaves/core/internal/voicepick"
 	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
@@ -97,10 +98,25 @@ func main() {
 		log.Print("vvaves: SPEAK_UNGUARDED, the speak routes answer anyone who reaches them")
 	}
 
+	var picker *voicepick.Picker[httpapi.Voice]
+	if pool != nil && cfg.TTSProvider == "mistral" {
+		var err error
+		picker, err = voicepick.NewPicker(context.Background(), pool, func(voiceID string) httpapi.Voice {
+			return buildAudio(cfg, newVoice, voiceID, "")
+		})
+		if err != nil {
+			log.Fatalf("vvaves: %v", err)
+		}
+		deps.Chosen = picker.Reader
+	}
+
 	mux := httpapi.New(deps)
 	webSession := buildWebSession(cfg)
 	if apps != nil {
 		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAdmin(webSession, members))
+	}
+	if picker != nil {
+		mux.Handle("/api/v1/admin/voices", middleware.RequireAdmin(webSession, members)(voicepick.Handler(picker, voicepick.Mistral{APIKey: cfg.TTSAPIKey})))
 	}
 	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession, members))
 	if members != nil {
