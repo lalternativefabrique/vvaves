@@ -44,6 +44,7 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       FETCH_PROXY: ${FETCH_PROXY}
+      STT_API_KEY: ${SCW_SECRET_KEY}
     resources:
       cpu: "1"
       memory: 1536M
@@ -317,6 +318,12 @@ spaces:
           kind: expensive
           security_headers: true
           timeout: "0"
+        - service: app
+          host: vvaves.dev
+          path: /transcribe
+          kind: expensive
+          security_headers: true
+          timeout: 150s
         - service: web
           host: vvaves.dev
           path: /

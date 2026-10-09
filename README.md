@@ -106,8 +106,8 @@ multipart/form-data: audio=<recording>, language=fr (optional)  -> {"text": "…
 ```
 
 Turns a recording (webm, ogg, m4a, wav, mp3; at most 25 MB) into text through
-an OpenAI-compatible `/audio/transcriptions` endpoint, Whisper on OVH AI
-Endpoints by default. Only a service credential is accepted — an app key, a
+an OpenAI-compatible `/audio/transcriptions` endpoint, Whisper on Scaleway
+Generative APIs by default. Only a service credential is accepted — an app key, a
 service token or a customer key carrying `vvaves:transcribe` — never a signed
 URL: a browser records, its application's server relays. The Go client's
 `Voice.Transcribe` makes the call. See ADR 0004.
@@ -126,7 +126,7 @@ URL: a browser records, its application's server relays. The Go client's
 | `TTS_CONCURRENCY` | pieces read at once, default 1 |
 | `LISTEN_ADDR` | default `:8080` |
 | `STT_API_KEY` | key of the transcription provider; unset answers `/transcribe` with `503` |
-| `STT_URL`, `STT_MODEL` | default OVH's `/v1/audio/transcriptions` and `whisper-large-v3-turbo` |
+| `STT_URL`, `STT_MODEL` | default Scaleway's `https://api.scaleway.ai/v1/audio/transcriptions` and `whisper-large-v3` |
 
 An unconfigured backend disables its endpoint rather than degrading silently.
 
