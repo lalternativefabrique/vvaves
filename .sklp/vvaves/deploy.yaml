@@ -44,6 +44,7 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       FETCH_PROXY: ${FETCH_PROXY}
+      STT_URL: https://api.scaleway.ai/54ccc1f0-e5d7-4253-b9cc-4ef5e0dd1aa2/v1/audio/transcriptions
       STT_API_KEY: ${SCW_AI_SECRET_KEY}
     resources:
       cpu: "1"
