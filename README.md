@@ -116,7 +116,7 @@ URL: a browser records, its application's server relays. The Go client's
 
 | | |
 |---|---|
-| `SPEAK_KEYS` | `issuer:key` pairs, an issuer repeatable: the key a service presents on `X-Vvaves-Key` and signs its browser URLs with; the registry supersedes them per issuer |
+| `SPEAK_KEYS` | `issuer:key` pairs, an issuer repeatable: the key a service signs its browser URLs with; the registry supersedes them per issuer |
 | `SPEAK_UNGUARDED` | `true` lets the speak routes answer with no key at all: a cluster-internal vvaves or a laptop, never one behind a public name. Without it and without keys, `/speak` refuses everyone |
 | `PIPER_URL` | required by `/speak`, else `503` |
 | `TTS_MODEL`, `TTS_VOICE`, `TTS_FORMAT` | voice selection; format must be frame-based (`mp3`, `opus`, `aac`, `flac`) |
@@ -157,13 +157,12 @@ one request covers a reading, and the server takes one slot per request.
 
 `/speak*` answers two callers, and nothing else.
 
-A **service** on the cluster's own network sends its key on `X-Vvaves-Key`,
-or, with `OIDC_ISSUER_URL` set, a bearer token from the suite's identity
-provider carrying `aud: vvaves` and the `vvaves:speak` scope. The Go client
-sends it through `client.Config.Authorize`, typically
-`svcauth.ClientCredentials.Authorize` from `packages/go/svcauth`.
-Each application has one key, so it can be rotated or revoked without
-touching another's, and a log line can name who called.
+A **service** sends a bearer token: a customer key urbangate issued for
+vvaves (`vvaves_key_…`), or, with `OIDC_ISSUER_URL` set, a token from the
+suite's identity provider carrying `aud: vvaves` and the `vvaves:speak`
+scope. The Go client sends the key it was given as that bearer, or whatever
+`WithAuthorize` attaches. Each application has one key, so it can be rotated
+or revoked without touching another's, and a log line can name who called.
 A **browser** cannot hold a key, so it carries a signature instead: the
 application that knows who is listening signs `scope`, `id`, a hash of the
 text and an expiry with a MAC key derived from that same key, and hands the

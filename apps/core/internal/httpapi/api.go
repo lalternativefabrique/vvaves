@@ -36,9 +36,6 @@ type Deps struct {
 	// browser. Nil accepts none, which is what a deployment reachable only
 	// from the cluster wants.
 	Verifier *signed.Verifier
-	// AppKeyIssuer names the service holding the key a request presents on
-	// a call of its own. Nil accepts no such call.
-	AppKeyIssuer func(key string) (string, bool)
 	// Tokens verifies the bearer token a service obtained from the suite's
 	// identity provider. Nil accepts no such call.
 	Tokens BearerVerifier

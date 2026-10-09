@@ -67,7 +67,7 @@ func TestSignTakesThePublicBaseFromTheRequest(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/speak/sign", strings.NewReader(speakBody))
 	req.Host = "api.voice.example"
 	req.Header.Set("X-Forwarded-Proto", "https")
-	req.Header.Set(httpapi.HeaderKey, "an-app-key")
+	req.Header.Set("Authorization", "Bearer a-service-token")
 	httpapi.New(d).ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"url":"https://api.voice.example/speak?`) {
 		t.Fatalf("status = %d, body %q", rec.Code, rec.Body.String())

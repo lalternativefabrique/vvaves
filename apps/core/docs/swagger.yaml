@@ -408,7 +408,6 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       security:
-      - ServiceKey: []
       - BearerAuth: []
       summary: Read a text aloud, from the store when it is already there
       tags:
@@ -441,7 +440,6 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       security:
-      - ServiceKey: []
       - BearerAuth: []
       summary: Whether a reading is already stored, without reading its bytes
       tags:
@@ -478,7 +476,6 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       security:
-      - ServiceKey: []
       - BearerAuth: []
       summary: Read a whole text ahead of time and keep it
       tags:
@@ -514,7 +511,6 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       security:
-      - ServiceKey: []
       - BearerAuth: []
       summary: Read a text's opening ahead of time, so the first listen starts at
         once
@@ -555,7 +551,6 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       security:
-      - ServiceKey: []
       - BearerAuth: []
       summary: Sign a /speak URL a browser can play
       tags:
@@ -607,9 +602,5 @@ securityDefinitions:
   BearerAuth:
     in: header
     name: Authorization
-    type: apiKey
-  ServiceKey:
-    in: header
-    name: X-Vvaves-Key
     type: apiKey
 swagger: "2.0"

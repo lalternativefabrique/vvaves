@@ -8,12 +8,8 @@ import (
 
 	"github.com/lalternative/packages/go/appkeys"
 	"github.com/lalternative/packages/go/svcauth"
-
-	sdk "github.com/lalternative/packages/vvaves/sdk-go"
 	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 )
-
-const HeaderKey = sdk.HeaderKey
 
 // ScopeSpeak is the OAuth2 scope a service's token must carry to have text
 // read: a token meant for another part of the suite must not reach the voice.
@@ -52,7 +48,7 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 	if d.Unguarded {
 		return nil
 	}
-	if d.Verifier == nil && d.AppKeyIssuer == nil && d.Tokens == nil && d.CustomerKeys == nil {
+	if d.Verifier == nil && d.Tokens == nil && d.CustomerKeys == nil {
 		return ErrNoGuard
 	}
 	if raw, ok := svcauth.BearerToken(r); ok {
@@ -61,11 +57,6 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 		}
 		if d.Tokens != nil {
 			return d.guardServiceToken(r.Context(), raw, ScopeSpeak)
-		}
-	}
-	if key := r.Header.Get(HeaderKey); key != "" && d.AppKeyIssuer != nil {
-		if _, ok := d.AppKeyIssuer(key); ok {
-			return nil
 		}
 	}
 	// A signature buys one reading, never the work of making one nobody is
@@ -91,11 +82,6 @@ func (d Deps) guardService(r *http.Request, scope string) error {
 		}
 		if d.Tokens != nil {
 			return d.guardServiceToken(r.Context(), raw, scope)
-		}
-	}
-	if key := r.Header.Get(HeaderKey); key != "" && d.AppKeyIssuer != nil {
-		if _, ok := d.AppKeyIssuer(key); ok {
-			return nil
 		}
 	}
 	return ErrBadToken

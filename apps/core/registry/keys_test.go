@@ -46,18 +46,6 @@ func TestRegistryWinsOverTheEnvironmentAndBothAreServed(t *testing.T) {
 	if got := k.Keys("lalter"); len(got) != 1 || got[0] != "lalter-secret" {
 		t.Fatalf("lalter keys = %v, want the environment's", got)
 	}
-	if name, ok := k.IssuerOf(key); !ok || name != "partage" {
-		t.Fatalf("IssuerOf(registry key) = %q,%v", name, ok)
-	}
-	if name, ok := k.IssuerOf("lalter-secret"); !ok || name != "lalter" {
-		t.Fatalf("IssuerOf(env key) = %q,%v", name, ok)
-	}
-	if _, ok := k.IssuerOf("old-env-secret"); ok {
-		t.Fatal("an environment key the registry superseded still names an issuer")
-	}
-	if _, ok := k.IssuerOf("nope"); ok {
-		t.Fatal("an unknown key found an issuer")
-	}
 }
 
 // A rotated app answers with both keys while its grace lasts, and a revoked
@@ -78,14 +66,8 @@ func TestRotationAndRevocationReachTheGuard(t *testing.T) {
 	if got := k.Keys("lalter"); len(got) != 2 || got[0] != k2 || got[1] != k1 {
 		t.Fatalf("lalter keys = %v, want current then previous", got)
 	}
-	if _, ok := k.IssuerOf(k1); !ok {
-		t.Fatal("the previous key stopped working inside the grace period")
-	}
 	if got := k.Keys("synthiz"); len(got) != 0 {
 		t.Fatalf("synthiz keys = %v, want none once revoked", got)
-	}
-	if _, ok := k.IssuerOf(k3); ok {
-		t.Fatal("a revoked key still names an issuer")
 	}
 }
 

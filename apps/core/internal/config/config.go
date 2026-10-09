@@ -50,12 +50,10 @@ type Config struct {
 
 	AudioOpeningChars int
 
-	// Keys are the applications' keys read from SPEAK_KEYS as "issuer:key"
-	// pairs, an issuer repeatable. One key does both jobs: presented on
-	// X-Vvaves-Key by the application's server, and the root the signatures
-	// on its browser-bound /speak URLs derive from. Empty admits nobody the
-	// registry does not, which is what a deployment reachable only from the
-	// cluster wants.
+	// Keys are the applications' signing keys read from SPEAK_KEYS as
+	// "issuer:key" pairs, an issuer repeatable: the root the signatures on an
+	// application's browser-bound /speak URLs derive from. Empty admits
+	// nobody the registry does not.
 	Keys map[string][]string
 
 	// DatabaseURL opens the registry of applications. Empty runs without it:

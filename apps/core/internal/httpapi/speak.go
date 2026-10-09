@@ -126,7 +126,6 @@ func decodeSpeak(w http.ResponseWriter, r *http.Request) (speakRequest, bool) {
 // @Failure  400   {object}  errorResponse
 // @Failure  401   {object}  errorResponse
 // @Failure  503   {object}  errorResponse
-// @Security ServiceKey
 // @Security BearerAuth
 // @Router   /speak [post]
 // @ID       speak
@@ -181,7 +180,6 @@ func handleSpeak(d Deps) http.HandlerFunc {
 // @Failure  400   {object}  errorResponse
 // @Failure  401   {object}  errorResponse
 // @Failure  503   {object}  errorResponse
-// @Security ServiceKey
 // @Security BearerAuth
 // @Router   /speak/prime [post]
 // @ID       primeSpeak
@@ -238,7 +236,6 @@ func handlePrime(d Deps) http.HandlerFunc {
 // @Failure  400   {object}  errorResponse
 // @Failure  401   {object}  errorResponse
 // @Failure  503   {object}  errorResponse
-// @Security ServiceKey
 // @Security BearerAuth
 // @Router   /speak/pregenerate [post]
 // @ID       pregenerateSpeak
@@ -288,7 +285,6 @@ type existsResponse struct {
 // @Success  200   {object}  existsResponse
 // @Failure  400   {object}  errorResponse
 // @Failure  401   {object}  errorResponse
-// @Security ServiceKey
 // @Security BearerAuth
 // @Router   /speak/exists [post]
 // @ID       speakExists

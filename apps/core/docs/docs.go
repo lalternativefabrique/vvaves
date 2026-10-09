@@ -330,9 +330,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -391,9 +388,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -444,9 +438,6 @@ const docTemplate = `{
         "/speak/pregenerate": {
             "post": {
                 "security": [
-                    {
-                        "ServiceKey": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -500,9 +491,6 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ServiceKey": []
-                    },
-                    {
                         "BearerAuth": []
                     }
                 ],
@@ -554,9 +542,6 @@ const docTemplate = `{
         "/speak/sign": {
             "post": {
                 "security": [
-                    {
-                        "ServiceKey": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -917,11 +902,6 @@ const docTemplate = `{
         "BearerAuth": {
             "type": "apiKey",
             "name": "Authorization",
-            "in": "header"
-        },
-        "ServiceKey": {
-            "type": "apiKey",
-            "name": "X-Vvaves-Key",
             "in": "header"
         }
     }

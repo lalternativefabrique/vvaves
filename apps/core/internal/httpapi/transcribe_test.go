@@ -42,11 +42,11 @@ func postAudio(t *testing.T, d httpapi.Deps, header, value string, audio []byte)
 	return rec
 }
 
-func TestTranscribeWithAnAppKey(t *testing.T) {
+func TestTranscribeWithAServiceToken(t *testing.T) {
 	stub := &stubTranscriber{}
 	d := guardedDeps(t)
 	d.Transcriber = stub
-	rec := postAudio(t, d, httpapi.HeaderKey, "an-app-key", []byte("RIFF"))
+	rec := postAudio(t, d, "Authorization", "Bearer a-service-token", []byte("RIFF"))
 	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte(`"text":"bonjour"`)) {
 		t.Fatalf("status = %d, body %q", rec.Code, rec.Body.String())
 	}
@@ -92,7 +92,7 @@ func TestTranscribeCustomerKeyAsksTheTranscribeScope(t *testing.T) {
 }
 
 func TestTranscribeUnconfiguredIs503(t *testing.T) {
-	if rec := postAudio(t, guardedDeps(t), httpapi.HeaderKey, "an-app-key", []byte("RIFF")); rec.Code != http.StatusServiceUnavailable {
+	if rec := postAudio(t, guardedDeps(t), "Authorization", "Bearer a-service-token", []byte("RIFF")); rec.Code != http.StatusServiceUnavailable {
 		t.Fatalf("status = %d, want 503", rec.Code)
 	}
 }
@@ -100,7 +100,7 @@ func TestTranscribeUnconfiguredIs503(t *testing.T) {
 func TestTranscribeRefusesEmptyAudio(t *testing.T) {
 	d := guardedDeps(t)
 	d.Transcriber = &stubTranscriber{}
-	if rec := postAudio(t, d, httpapi.HeaderKey, "an-app-key", nil); rec.Code != http.StatusBadRequest {
+	if rec := postAudio(t, d, "Authorization", "Bearer a-service-token", nil); rec.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400", rec.Code)
 	}
 }

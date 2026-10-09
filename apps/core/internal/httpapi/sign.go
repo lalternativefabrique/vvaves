@@ -49,7 +49,6 @@ type signResponse struct {
 // @Failure  400   {object}  errorResponse
 // @Failure  401   {object}  errorResponse
 // @Failure  503   {object}  errorResponse
-// @Security ServiceKey
 // @Security BearerAuth
 // @Router   /speak/sign [post]
 // @ID       signSpeak
