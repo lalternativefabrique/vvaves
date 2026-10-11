@@ -19,15 +19,16 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAppsRouteImport } from './routes/admin/apps'
-import { Route as AdminVoicesRouteImport } from './routes/admin/voices'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as AppKeysRouteImport } from './routes/app/keys'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
+import { Route as AppVoicesRouteImport } from './routes/app/voices'
 import { Route as LoginCodeRouteImport } from './routes/login_.code'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiKeysIndexRouteImport } from './routes/api/keys.index'
 import { Route as ApiKeysIdRouteImport } from './routes/api/keys.$id'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
+import { Route as ApiV1VoicesSplatRouteImport } from './routes/api/v1/voices.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -79,11 +80,6 @@ const AdminAppsRoute = AdminAppsRouteImport.update({
   path: '/apps',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminVoicesRoute = AdminVoicesRouteImport.update({
-  id: '/voices',
-  path: '/voices',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin_/login',
   path: '/admin/login',
@@ -97,6 +93,11 @@ const AppKeysRoute = AppKeysRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVoicesRoute = AppVoicesRouteImport.update({
+  id: '/voices',
+  path: '/voices',
   getParentRoute: () => AppRoute,
 } as any)
 const LoginCodeRoute = LoginCodeRouteImport.update({
@@ -124,6 +125,11 @@ const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
   path: '/api/v1/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1VoicesSplatRoute = ApiV1VoicesSplatRouteImport.update({
+  id: '/api/v1/voices/$',
+  path: '/api/v1/voices/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -135,16 +141,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/voices': typeof AdminVoicesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/voices': typeof AppVoicesRoute
   '/login/code': typeof LoginCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys/': typeof ApiKeysIndexRoute
+  '/api/v1/voices/$': typeof ApiV1VoicesSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,16 +162,17 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/voices': typeof AdminVoicesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/voices': typeof AppVoicesRoute
   '/login/code': typeof LoginCodeRoute
   '/admin': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys': typeof ApiKeysIndexRoute
+  '/api/v1/voices/$': typeof ApiV1VoicesSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,16 +185,17 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/apps': typeof AdminAppsRoute
-  '/admin/voices': typeof AdminVoicesRoute
   '/admin_/login': typeof AdminLoginRoute
   '/app/keys': typeof AppKeysRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/voices': typeof AppVoicesRoute
   '/login_/code': typeof LoginCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/keys/$id': typeof ApiKeysIdRoute
   '/api/v1/$': typeof ApiV1SplatRoute
   '/api/keys/': typeof ApiKeysIndexRoute
+  '/api/v1/voices/$': typeof ApiV1VoicesSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,16 +209,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
-    | '/admin/voices'
     | '/admin/login'
     | '/app/keys'
     | '/app/settings'
+    | '/app/voices'
     | '/login/code'
     | '/admin/'
     | '/api/auth/$'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys/'
+    | '/api/v1/voices/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,16 +230,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
-    | '/admin/voices'
     | '/admin/login'
     | '/app/keys'
     | '/app/settings'
+    | '/app/voices'
     | '/login/code'
     | '/admin'
     | '/api/auth/$'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys'
+    | '/api/v1/voices/$'
   id:
     | '__root__'
     | '/'
@@ -241,16 +252,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/verify-email'
     | '/admin/apps'
-    | '/admin/voices'
     | '/admin_/login'
     | '/app/keys'
     | '/app/settings'
+    | '/app/voices'
     | '/login_/code'
     | '/admin/'
     | '/api/auth/$'
     | '/api/keys/$id'
     | '/api/v1/$'
     | '/api/keys/'
+    | '/api/v1/voices/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   ApiKeysIdRoute: typeof ApiKeysIdRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
   ApiKeysIndexRoute: typeof ApiKeysIndexRoute
+  ApiV1VoicesSplatRoute: typeof ApiV1VoicesSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -342,13 +355,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/voices': {
-      id: '/admin/voices'
-      path: '/voices'
-      fullPath: '/admin/voices'
-      preLoaderRoute: typeof AdminVoicesRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin_/login': {
       id: '/admin_/login'
       path: '/admin/login'
@@ -368,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/voices': {
+      id: '/app/voices'
+      path: '/voices'
+      fullPath: '/app/voices'
+      preLoaderRoute: typeof AppVoicesRouteImport
       parentRoute: typeof AppRoute
     }
     '/login_/code': {
@@ -405,18 +418,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/voices/$': {
+      id: '/api/v1/voices/$'
+      path: '/api/v1/voices/$'
+      fullPath: '/api/v1/voices/$'
+      preLoaderRoute: typeof ApiV1VoicesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminAppsRoute: typeof AdminAppsRoute
-  AdminVoicesRoute: typeof AdminVoicesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAppsRoute: AdminAppsRoute,
-  AdminVoicesRoute: AdminVoicesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -425,11 +443,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 interface AppRouteChildren {
   AppKeysRoute: typeof AppKeysRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppVoicesRoute: typeof AppVoicesRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppKeysRoute: AppKeysRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppVoicesRoute: AppVoicesRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -449,6 +469,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKeysIdRoute: ApiKeysIdRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
   ApiKeysIndexRoute: ApiKeysIndexRoute,
+  ApiV1VoicesSplatRoute: ApiV1VoicesSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -32,13 +32,6 @@ function AdminShell() {
           >
             Applications
           </Link>
-          <Link
-            to="/admin/voices"
-            className={linkClass}
-            activeProps={{ className: activeClass }}
-          >
-            Voix
-          </Link>
         </>
       }
       app={{ name: 'Vvaves', tone: 'blue' }}

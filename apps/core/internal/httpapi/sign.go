@@ -75,6 +75,9 @@ func handleSign(d Deps) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		if keyID := d.callerKey(r); keyID != "" {
+			q.Set(QueryKey, keyID)
+		}
 		writeJSON(w, http.StatusOK, signResponse{
 			URL:       publicBase(r, d.PublicURL) + speakPath + "?" + q.Encode(),
 			ExpiresAt: time.Unix(expires.Unix(), 0).UTC(),
