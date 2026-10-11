@@ -12,6 +12,8 @@ import (
 	"github.com/lalternative/packages/go/audioreader"
 
 	"github.com/lalternative/packages/vvaves/sdk-go/signed"
+
+	"github.com/lalternativefabrique/vvaves/core/internal/costs"
 )
 
 type speakRequest struct {
@@ -150,10 +152,12 @@ func handleSpeak(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		if err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
+		ar.BillTo = client
 		// audioreader reads the stream flag off the query string; the body is
 		// where this API has always carried it. Both are honoured so a caller
 		// can ask either way.
@@ -208,14 +212,15 @@ func handlePrime(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		if err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
 		go func() {
 			// Detached: this outlives the 202 by design, and the request's
 			// context is torn down the moment that answer lands.
-			ctx, cancel := context.WithTimeout(context.Background(), primeTimeout)
+			ctx, cancel := context.WithTimeout(costs.WithClient(context.Background(), client), primeTimeout)
 			defer cancel()
 			if err := voice.Primer.PrimeOpening(ctx, ar.Scope, ar.ID, ar.Text); err != nil {
 				log.Printf("vvaves: prime %s/%s: %v", ar.Scope, ar.ID, err)
@@ -260,10 +265,12 @@ func handlePregenerate(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		if err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
+		ar.BillTo = client
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), primeTimeout)
 			defer cancel()
@@ -308,7 +315,7 @@ func handleExists(d Deps) http.HandlerFunc {
 			return
 		}
 		ar := req.request()
-		if err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		if _, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
 			writeAuthError(w, err)
 			return
 		}
