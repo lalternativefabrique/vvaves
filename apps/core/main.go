@@ -66,7 +66,7 @@ func main() {
 	pool := openPool(cfg)
 	lifecycle, stopLifecycle := context.WithCancel(context.Background())
 	defer stopLifecycle()
-	recorder := buildCosts(lifecycle, cfg, pool)
+	recorder, directory := buildCosts(lifecycle, cfg, pool)
 
 	newVoice := voiceMaker(cfg, recorder)
 	speech := buildAudio(cfg, newVoice, cfg.TTSVoice, "")
@@ -135,7 +135,7 @@ func main() {
 		)))
 		mux.Handle("/api/v1/voices/", voicesAPI)
 	}
-	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession, members))
+	keysapi.New(keyRelay(customerKeys), directory).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession, members))
 	if members != nil {
 		me := middleware.RequireAuth(webSession, members)(members.MeHandler(identityOfSession))
 		mux.Handle("GET /api/v1/me/membership", me)
@@ -166,23 +166,25 @@ func main() {
 
 // buildCosts declares provider costs through a database outbox, so a Lungor
 // that cannot be reached delays a declaration and never loses it.
-func buildCosts(ctx context.Context, cfg config.Config, pool *pgxpool.Pool) costs.Recorder {
+func buildCosts(ctx context.Context, cfg config.Config, pool *pgxpool.Pool) (costs.Recorder, keysapi.Directory) {
 	if cfg.LungorAPIURL == "" || cfg.LungorAppKey == "" {
 		log.Print("vvaves: no LUNGOR_API_URL or LUNGOR_APP_KEY, provider costs are not declared")
-		return nil
+		return nil, nil
 	}
 	if pool == nil {
 		log.Print("vvaves: no DATABASE_URL, provider costs are not declared")
-		return nil
+		return nil, nil
 	}
 	outbox := costs.NewOutbox(pool)
+	clients := costs.NewClients(pool)
 	go costs.Sender{
-		Outbox: outbox,
-		Lungor: costs.Lungor{URL: cfg.LungorAPIURL, AppKey: cfg.LungorAppKey},
-		Log:    slog.Default(),
+		Outbox:  outbox,
+		Clients: clients,
+		Lungor:  costs.Lungor{URL: cfg.LungorAPIURL, AppKey: cfg.LungorAppKey},
+		Log:     slog.Default(),
 	}.Run(ctx)
-	log.Printf("vvaves: provider costs declared to %s", cfg.LungorAPIURL)
-	return outbox
+	log.Printf("vvaves: provider costs and key clients declared to %s", cfg.LungorAPIURL)
+	return outbox, clients
 }
 
 // buildRegistry opens the applications registry when a database is

@@ -21,8 +21,8 @@ func NewOutbox(pool *pgxpool.Pool) *Outbox {
 
 func (o *Outbox) Record(ctx context.Context, l Line) error {
 	_, err := o.pool.Exec(ctx, `
-		INSERT INTO cost_outbox (code, quantity, occurred_at, idempotency_key, external_user_id)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO cost_outbox (code, quantity, occurred_at, idempotency_key, external_user_id, client_name)
+		VALUES ($1, $2, $3, $4, $5, COALESCE((SELECT name FROM key_client WHERE key_id = $5), ''))
 		ON CONFLICT (idempotency_key) DO NOTHING`,
 		l.Code, l.Quantity, l.OccurredAt, l.IdempotencyKey, l.ExternalUserID)
 	if err != nil {
@@ -45,7 +45,7 @@ func (o *Outbox) claim(ctx context.Context, limit int) (pgx.Tx, []pending, error
 		return nil, nil, err
 	}
 	rows, err := tx.Query(ctx, `
-		SELECT id, attempts, code, quantity, occurred_at, idempotency_key, external_user_id
+		SELECT id, attempts, code, quantity, occurred_at, idempotency_key, external_user_id, client_name
 		FROM cost_outbox
 		WHERE sent_at IS NULL AND parked_at IS NULL AND next_attempt_at <= now()
 		ORDER BY id
@@ -57,7 +57,7 @@ func (o *Outbox) claim(ctx context.Context, limit int) (pgx.Tx, []pending, error
 	}
 	out, err := pgx.CollectRows(rows, func(r pgx.CollectableRow) (pending, error) {
 		var p pending
-		err := r.Scan(&p.id, &p.attempts, &p.line.Code, &p.line.Quantity, &p.line.OccurredAt, &p.line.IdempotencyKey, &p.line.ExternalUserID)
+		err := r.Scan(&p.id, &p.attempts, &p.line.Code, &p.line.Quantity, &p.line.OccurredAt, &p.line.IdempotencyKey, &p.line.ExternalUserID, &p.line.ClientName)
 		return p, err
 	})
 	if err != nil {

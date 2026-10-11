@@ -14,6 +14,7 @@ type Line struct {
 	OccurredAt     time.Time `json:"occurred_at"`
 	IdempotencyKey string    `json:"idempotency_key"`
 	ExternalUserID string    `json:"external_user_id,omitempty"`
+	ClientName     string    `json:"client_name,omitempty"`
 }
 
 type Recorder interface {

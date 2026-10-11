@@ -18,6 +18,7 @@ import (
 const (
 	senderBatch    = 100
 	senderInterval = 2 * time.Second
+	clientsEvery   = 15
 )
 
 var errRejected = errors.New("lungor rejected the cost lines")
@@ -41,17 +42,20 @@ func (l Lungor) Post(ctx context.Context, lines []Line) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+l.AppKey)
 	req.Header.Set("Content-Type", "application/json")
-	httpc := l.HTTP
-	if httpc == nil {
-		httpc = &http.Client{Timeout: 15 * time.Second}
-	}
-	res, err := httpc.Do(req)
+	res, err := l.client().Do(req)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 	msg, _ := io.ReadAll(io.LimitReader(res.Body, 4<<10))
 	return classify(res.StatusCode, strings.TrimSpace(string(msg)))
+}
+
+func (l Lungor) client() *http.Client {
+	if l.HTTP != nil {
+		return l.HTTP
+	}
+	return &http.Client{Timeout: 15 * time.Second}
 }
 
 // classify parks what Lungor refuses for the lines themselves (an unknown or
@@ -69,19 +73,25 @@ func classify(status int, body string) error {
 }
 
 type Sender struct {
-	Outbox *Outbox
-	Lungor Lungor
-	Log    *slog.Logger
+	Outbox  *Outbox
+	Clients *Clients
+	Lungor  Lungor
+	Log     *slog.Logger
 }
 
 func (s Sender) Run(ctx context.Context) {
 	t := time.NewTicker(senderInterval)
 	defer t.Stop()
+	tick := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
+			if tick%clientsEvery == 0 {
+				s.syncClients(ctx)
+			}
+			tick++
 			for {
 				n, err := s.runOnce(ctx)
 				if err != nil {
