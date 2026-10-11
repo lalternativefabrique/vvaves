@@ -13,13 +13,14 @@ import (
 )
 
 type stubCustomerKeys struct {
-	err    error
-	scopes []string
+	err      error
+	scopes   []string
+	clientID string
 }
 
 func (s *stubCustomerKeys) Verify(_ context.Context, _ string, scopes ...string) (svcauth.Claims, error) {
 	s.scopes = scopes
-	return svcauth.Claims{}, s.err
+	return svcauth.Claims{ClientID: s.clientID}, s.err
 }
 
 const customerKey = "vvaves_key_eyJhbGciOiJSUzI1NiJ9.e30.sig" // gitleaks:allow fake key, verified by a stub

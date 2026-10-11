@@ -43,6 +43,13 @@ function AppShell() {
               Clés
             </Link>
             <Link
+              to="/app/voices"
+              className="text-muted-foreground hover:text-foreground"
+              activeProps={{ className: 'text-foreground' }}
+            >
+              Voix
+            </Link>
+            <Link
               to="/app/settings"
               className="text-muted-foreground hover:text-foreground"
               activeProps={{ className: 'text-foreground' }}

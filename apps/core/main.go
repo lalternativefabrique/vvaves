@@ -18,10 +18,13 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/signal"
 	"strings"
@@ -45,8 +48,8 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
+	"github.com/lalternativefabrique/vvaves/core/internal/keyvoice"
 	"github.com/lalternativefabrique/vvaves/core/internal/stt"
-	"github.com/lalternativefabrique/vvaves/core/internal/voicepick"
 	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
@@ -98,16 +101,22 @@ func main() {
 		log.Print("vvaves: SPEAK_UNGUARDED, the speak routes answer anyone who reaches them")
 	}
 
-	var picker *voicepick.Picker[httpapi.Voice]
+	var keyVoices *keyvoice.Store
 	if pool != nil && cfg.TTSProvider == "mistral" {
-		var err error
-		picker, err = voicepick.NewPicker(context.Background(), pool, func(voiceID string) httpapi.Voice {
+		keyVoices = keyvoice.NewStore(pool)
+		readers := keyvoice.NewReaders(func(voiceID string) httpapi.Voice {
 			return buildAudio(cfg, newVoice, voiceID, "")
 		})
-		if err != nil {
-			log.Fatalf("vvaves: %v", err)
+		deps.KeyVoice = func(ctx context.Context, keyID string) (httpapi.Voice, string, bool) {
+			voiceID, err := keyVoices.VoiceOf(ctx, keyID)
+			if err != nil {
+				log.Printf("vvaves: %v", err)
+			}
+			if voiceID == "" {
+				return httpapi.Voice{}, "", false
+			}
+			return readers.For(voiceID), voiceID, true
 		}
-		deps.Chosen = picker.Reader
 	}
 
 	mux := httpapi.New(deps)
@@ -115,8 +124,13 @@ func main() {
 	if apps != nil {
 		apps.RegisterRoutes(mux, "/api/v1", middleware.RequireAdmin(webSession, members))
 	}
-	if picker != nil {
-		mux.Handle("/api/v1/admin/voices", middleware.RequireAdmin(webSession, members)(voicepick.Handler(picker, voicepick.Mistral{APIKey: cfg.TTSAPIKey})))
+	if keyVoices != nil && customerKeys != nil {
+		voicesAPI := middleware.RequireAuth(webSession, members)(http.StripPrefix("/api/v1/voices", keyvoice.Handler(
+			keyVoices,
+			&keyvoice.CachedCatalogue{Source: keyvoice.Mistral{APIKey: cfg.TTSAPIKey}},
+			keyvoice.Owners{OwnerOf: ownerOfSession, Owns: ownsKey(customerKeys)},
+		)))
+		mux.Handle("/api/v1/voices/", voicesAPI)
 	}
 	keysapi.New(keyRelay(customerKeys)).RegisterRoutes(mux, "/api/keys", middleware.RequireAuth(webSession, members))
 	if members != nil {
@@ -250,6 +264,34 @@ func customerKeyVerifier(keys *appkeys.Keys) httpapi.CustomerKeyVerifier {
 		return nil
 	}
 	return keys
+}
+
+// ownsKey asks urbangate, through the key page's own relay, whether the
+// signed-in person holds a key: appkeys exposes no listing but that one.
+func ownsKey(keys *appkeys.Keys) func(*http.Request, string) (bool, error) {
+	relay := keys.Relay()
+	return func(r *http.Request, keyID string) (bool, error) {
+		list := httptest.NewRequestWithContext(r.Context(), http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+		relay.ServeHTTP(rec, list)
+		if rec.Code != http.StatusOK {
+			return false, fmt.Errorf("list keys: status %d", rec.Code)
+		}
+		var answer struct {
+			Keys []struct {
+				ID string `json:"id"`
+			} `json:"keys"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &answer); err != nil {
+			return false, fmt.Errorf("list keys: %w", err)
+		}
+		for _, k := range answer.Keys {
+			if k.ID == keyID {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
 }
 
 // keyRelay serves the key page's three calls from here, with the provisioner

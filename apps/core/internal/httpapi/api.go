@@ -5,6 +5,7 @@
 package httpapi
 
 import (
+	"context"
 	"github.com/lalternativefabrique/vvaves/core/docs/contract"
 
 	"encoding/json"
@@ -31,9 +32,9 @@ type Deps struct {
 	// "*" as the subtag covers every language ("*/male"). A listener no key
 	// covers is read by Reader and Primer.
 	Voices map[string]Voice
-	// Chosen is the voice picked in the admin; when it answers true it reads
-	// every request, ahead of Voices and the deployment default.
-	Chosen func() (Voice, string, bool)
+	// KeyVoice is the voice the owner of an application key chose for it;
+	// when it answers true it reads that key's requests, ahead of Voices.
+	KeyVoice func(ctx context.Context, keyID string) (Voice, string, bool)
 
 	// Verifier authenticates a /speak request that came straight from a
 	// browser. Nil accepts none, which is what a deployment reachable only

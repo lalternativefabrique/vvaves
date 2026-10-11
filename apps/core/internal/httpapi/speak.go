@@ -68,9 +68,11 @@ func (r speakRequest) request() audioreader.Request {
 // the same. The nearest declared voice wins: their language in their gender,
 // then their language, then their gender in any language, then the default.
 func (d Deps) voice(r *http.Request, req speakRequest) (Voice, string) {
-	if d.Chosen != nil {
-		if v, id, ok := d.Chosen(); ok {
-			return v, id
+	if d.KeyVoice != nil {
+		if keyID := d.callerKey(r); keyID != "" {
+			if v, id, ok := d.KeyVoice(r.Context(), keyID); ok {
+				return v, id
+			}
 		}
 	}
 	lang := req.Lang

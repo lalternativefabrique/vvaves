@@ -177,3 +177,24 @@ func writeAuthError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusForbidden, "not authorised to read this text")
 	}
 }
+
+// QueryKey carries, on a URL /speak/sign handed out, the key that asked for
+// it, so the browser that plays it hears that key's voice. It is not signed:
+// like lang and gender it picks who reads, never what is read.
+const QueryKey = "key"
+
+// callerKey names the application key behind a request, from its bearer or
+// from the URL /speak/sign handed out, or "" for any other caller.
+func (d Deps) callerKey(r *http.Request) string {
+	if raw, ok := svcauth.BearerToken(r); ok && strings.HasPrefix(raw, customerKeyPrefix) {
+		if d.CustomerKeys == nil {
+			return ""
+		}
+		claims, err := d.CustomerKeys.Verify(r.Context(), raw)
+		if err != nil {
+			return ""
+		}
+		return claims.ClientID
+	}
+	return r.URL.Query().Get(QueryKey)
+}
