@@ -5,14 +5,10 @@
 # vvaves has no plan: it only declares what its speech providers cost, on
 # itself, naming the client that caused it. Lungor charges the app a client is
 # linked to in the console. Codes are audio.CostCode: <provider>/<model>.chars.
+# The items are created by Lungor's Mistral price importer, not here:
+# attaching one that was never imported fails the apply.
 apps:
   - slug: vvaves
     name: Vvaves
-    cost_items:
-      - code: mistral/voxtral-mini-tts-latest.chars
-        name: Voxtral TTS
-        supplier: mistral
-        unit: 1K characters
-        unit_size: 1000
-        price_micros: 14240
-        currency: EUR
+    costs:
+      - mistral/voxtral-mini-tts-latest.chars
