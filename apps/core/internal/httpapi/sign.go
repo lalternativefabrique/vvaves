@@ -59,7 +59,7 @@ func handleSign(d Deps) http.HandlerFunc {
 			return
 		}
 		ar := req.request()
-		if err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		if _, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
 			writeAuthError(w, err)
 			return
 		}

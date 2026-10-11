@@ -47,6 +47,7 @@ import (
 	"github.com/lalternative/packages/vvaves/sdk-go/signed"
 	"github.com/lalternativefabrique/vvaves/core/internal/audio"
 	"github.com/lalternativefabrique/vvaves/core/internal/config"
+	"github.com/lalternativefabrique/vvaves/core/internal/costs"
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
 	"github.com/lalternativefabrique/vvaves/core/internal/keyvoice"
 	"github.com/lalternativefabrique/vvaves/core/internal/stt"
@@ -62,7 +63,12 @@ func main() {
 
 	defer natsbus.CloseSharedConnection()
 
-	newVoice := voiceMaker(cfg)
+	pool := openPool(cfg)
+	lifecycle, stopLifecycle := context.WithCancel(context.Background())
+	defer stopLifecycle()
+	recorder := buildCosts(lifecycle, cfg, pool)
+
+	newVoice := voiceMaker(cfg, recorder)
 	speech := buildAudio(cfg, newVoice, cfg.TTSVoice, "")
 	voices := map[string]httpapi.Voice{}
 	for key, voiceID := range cfg.TTSVoices {
@@ -73,11 +79,8 @@ func main() {
 		voices[key] = buildAudio(cfg, newVoice, voiceID, lang)
 	}
 
-	pool := openPool(cfg)
 	apps, keys := buildRegistry(cfg, pool)
 	members := buildMembership(cfg, pool)
-	lifecycle, stopLifecycle := context.WithCancel(context.Background())
-	defer stopLifecycle()
 
 	customerKeys := buildCustomerKeys(cfg)
 	signingSecret := speakSigningSecret(cfg)
@@ -159,6 +162,27 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("vvaves: shutdown: %v", err)
 	}
+}
+
+// buildCosts declares provider costs through a database outbox, so a Lungor
+// that cannot be reached delays a declaration and never loses it.
+func buildCosts(ctx context.Context, cfg config.Config, pool *pgxpool.Pool) costs.Recorder {
+	if cfg.LungorAPIURL == "" || cfg.LungorAppKey == "" {
+		log.Print("vvaves: no LUNGOR_API_URL or LUNGOR_APP_KEY, provider costs are not declared")
+		return nil
+	}
+	if pool == nil {
+		log.Print("vvaves: no DATABASE_URL, provider costs are not declared")
+		return nil
+	}
+	outbox := costs.NewOutbox(pool)
+	go costs.Sender{
+		Outbox: outbox,
+		Lungor: costs.Lungor{URL: cfg.LungorAPIURL, AppKey: cfg.LungorAppKey},
+		Log:    slog.Default(),
+	}.Run(ctx)
+	log.Printf("vvaves: provider costs declared to %s", cfg.LungorAPIURL)
+	return outbox
 }
 
 // buildRegistry opens the applications registry when a database is
@@ -405,8 +429,8 @@ func buildRegistry(cfg config.Config, pool *pgxpool.Pool) (*registry.Service, *r
 // A store that is configured but broken is fatal here rather than silently
 // dropped: someone asked for a cache, and starting without one would hide
 // that behind a bill nobody notices until it arrives.
-func buildAudio(cfg config.Config, newVoice func(voiceID, lang string) tts.Voice, voiceID, lang string) httpapi.Voice {
-	provider := audio.NewProvider(newVoice(voiceID, lang))
+func buildAudio(cfg config.Config, newVoice func(voiceID, lang string) audioreader.Provider, voiceID, lang string) httpapi.Voice {
+	provider := newVoice(voiceID, lang)
 	if provider == nil {
 		return httpapi.Voice{}
 	}
@@ -432,7 +456,15 @@ func buildAudio(cfg config.Config, newVoice func(voiceID, lang string) tts.Voice
 // voiceMaker returns how to build a voice for a language, nil when no
 // speech service is configured, which the speak handlers report rather than
 // pretending to a disabled mode.
-func voiceMaker(cfg config.Config) func(voiceID, lang string) tts.Voice {
+func voiceMaker(cfg config.Config, recorder costs.Recorder) func(voiceID, lang string) audioreader.Provider {
+	code := audio.CostCode(cfg.TTSProvider, cfg.TTSModel)
+	voices := ttsVoices(cfg)
+	return func(voiceID, lang string) audioreader.Provider {
+		return audio.Metered(audio.NewProvider(voices(voiceID, lang)), code, recorder)
+	}
+}
+
+func ttsVoices(cfg config.Config) func(voiceID, lang string) tts.Voice {
 	base := tts.Config{
 		APIKey:      cfg.TTSAPIKey,
 		Model:       cfg.TTSModel,

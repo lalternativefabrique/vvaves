@@ -12,7 +12,10 @@ import (
 	"github.com/lalternative/packages/go/tts"
 )
 
-const mistralBaseURL = "https://api.mistral.ai"
+const (
+	mistralBaseURL = "https://api.mistral.ai"
+	mistralModel   = "voxtral-mini-tts-latest"
+)
 
 // NewMistralVoice reads through Mistral's /v1/audio/speech, which differs
 // from the OpenAI protocol tts.OpenAIVoice speaks only on the wire: the voice
@@ -24,7 +27,7 @@ func NewMistralVoice(cfg tts.Config) *tts.OpenAIVoice {
 		cfg.BaseURL = mistralBaseURL
 	}
 	if cfg.Model == "" {
-		cfg.Model = "voxtral-mini-tts-latest"
+		cfg.Model = mistralModel
 	}
 	next := http.DefaultTransport
 	if cfg.Client != nil && cfg.Client.Transport != nil {

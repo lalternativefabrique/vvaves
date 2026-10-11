@@ -44,12 +44,12 @@ var customerKeyPrefix = appkeys.KeyPrefix("vvaves")
 // vvaves that reaches the internet with no key is not an internal one, it
 // is an open voice, and silence about a missing key must not look like a
 // working service.
-func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
+func (d Deps) guardSpeak(r *http.Request, scope, id, text string) (string, error) {
 	if d.Unguarded {
-		return nil
+		return "", nil
 	}
 	if d.Verifier == nil && d.Tokens == nil && d.CustomerKeys == nil {
-		return ErrNoGuard
+		return "", ErrNoGuard
 	}
 	if raw, ok := svcauth.BearerToken(r); ok {
 		if strings.HasPrefix(raw, customerKeyPrefix) {
@@ -65,9 +65,13 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) error {
 	// the same URL — so a link good for playing a reply would otherwise also
 	// pregenerate whole articles, on a voice that reads one at a time.
 	if r.URL.Path != speakPath {
-		return ErrSignatureNotAcceptedHere
+		return "", ErrSignatureNotAcceptedHere
 	}
-	return d.Verifier.Verify(r.URL.Query(), scope, id, text)
+	q := r.URL.Query()
+	if err := d.Verifier.Verify(q, scope, id, text); err != nil {
+		return "", err
+	}
+	return q.Get(signed.QueryIssuer), nil
 }
 
 // guardService admits only a service credential: a signed listener URL buys a
@@ -78,51 +82,53 @@ func (d Deps) guardService(r *http.Request, scope string) error {
 	}
 	if raw, ok := svcauth.BearerToken(r); ok {
 		if strings.HasPrefix(raw, customerKeyPrefix) {
-			return d.guardCustomerKey(r.Context(), raw, scope)
+			_, err := d.guardCustomerKey(r.Context(), raw, scope)
+			return err
 		}
 		if d.Tokens != nil {
-			return d.guardServiceToken(r.Context(), raw, scope)
+			_, err := d.guardServiceToken(r.Context(), raw, scope)
+			return err
 		}
 	}
 	return ErrBadToken
 }
 
-func (d Deps) guardServiceToken(ctx context.Context, raw, scope string) error {
+func (d Deps) guardServiceToken(ctx context.Context, raw, scope string) (string, error) {
 	claims, err := d.Tokens.Verify(ctx, raw)
 	if errors.Is(err, svcauth.ErrUnavailable) {
-		return ErrIdentityProviderUnavailable
+		return "", ErrIdentityProviderUnavailable
 	}
 	if err != nil {
-		return ErrBadToken
+		return "", ErrBadToken
 	}
 	if !claims.HasScope(scope) {
-		return ErrTokenLacksScope
+		return "", ErrTokenLacksScope
 	}
-	return nil
+	return claims.ClientID, nil
 }
 
 // guardCustomerKey answers a key this product cannot judge with
 // ErrRevocationUnknown, never with a refusal: no list, or a list too old, says
 // nothing about the key, and telling a customer their valid key is invalid
 // sends them rotating it during an outage.
-func (d Deps) guardCustomerKey(ctx context.Context, raw, scope string) error {
+func (d Deps) guardCustomerKey(ctx context.Context, raw, scope string) (string, error) {
 	if d.CustomerKeys == nil {
-		return ErrRevocationUnknown
+		return "", ErrRevocationUnknown
 	}
-	_, err := d.CustomerKeys.Verify(ctx, raw, scope)
+	claims, err := d.CustomerKeys.Verify(ctx, raw, scope)
 	switch {
 	case err == nil:
-		return nil
+		return claims.ClientID, nil
 	case errors.Is(err, svcauth.ErrUnavailable):
-		return ErrIdentityProviderUnavailable
+		return "", ErrIdentityProviderUnavailable
 	case errors.Is(err, appkeys.ErrListStale), errors.Is(err, svcauth.ErrRevocationUnknown):
-		return ErrRevocationUnknown
+		return "", ErrRevocationUnknown
 	case errors.Is(err, svcauth.ErrKeyRevoked):
-		return ErrKeyRevoked
+		return "", ErrKeyRevoked
 	case errors.Is(err, appkeys.ErrMissingScope):
-		return ErrTokenLacksScope
+		return "", ErrTokenLacksScope
 	default:
-		return ErrBadToken
+		return "", ErrBadToken
 	}
 }
 

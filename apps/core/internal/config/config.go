@@ -95,6 +95,11 @@ type Config struct {
 	// SpeakPublicURL is the origin browsers reach /speak on, read from
 	// SPEAK_PUBLIC_URL. Empty takes it from the request's Host.
 	SpeakPublicURL string
+
+	// LungorAPIURL and LungorAppKey declare provider costs to Lungor on
+	// vvaves's own app. Either empty declares nothing.
+	LungorAPIURL string
+	LungorAppKey string
 }
 
 func Load() Config {
@@ -135,6 +140,8 @@ func Load() Config {
 		Keys: envPairs("SPEAK_KEYS"),
 
 		DatabaseURL:           os.Getenv("DATABASE_URL"),
+		LungorAPIURL:          os.Getenv("LUNGOR_API_URL"),
+		LungorAppKey:          os.Getenv("LUNGOR_APP_KEY"),
 		SuiteNATSURL:          os.Getenv("SUITE_NATS_URL"),
 		SuiteNATSUser:         os.Getenv("SUITE_NATS_USER"),
 		SuiteNATSPassword:     os.Getenv("SUITE_NATS_PASSWORD"),

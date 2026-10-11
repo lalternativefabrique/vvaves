@@ -1,0 +1,18 @@
+# vvaves's Lungor catalogue. Apply with:
+#   LUNGOR_API_URL=https://api.lungor.fr LUNGOR_WEB_URL=https://lungor.fr \
+#   LUNGOR_TENANT_ID=<tenant> lungor provision tenants/vvaves.yaml --dry-run
+#
+# vvaves has no plan: it only declares what its speech providers cost, on
+# itself, naming the client that caused it. Lungor charges the app a client is
+# linked to in the console. Codes are audio.CostCode: <provider>/<model>.chars.
+apps:
+  - slug: vvaves
+    name: Vvaves
+    cost_items:
+      - code: mistral/voxtral-mini-tts-latest.chars
+        name: Voxtral TTS
+        supplier: mistral
+        unit: 1K characters
+        unit_size: 1000
+        price_micros: 14240
+        currency: EUR
