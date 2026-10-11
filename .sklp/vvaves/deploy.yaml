@@ -38,6 +38,8 @@ services:
       TTS_VOICES: fr:fr_marie_neutral,en:en_paul_neutral
       TTS_CONCURRENCY: "2"
       TTS_PROVIDER_CONCURRENCY: "2"
+      LUNGOR_API_URL: http://core.lungor-production.internal
+      LUNGOR_APP_KEY: ${LUNGOR_APP_KEY}
       S3_ENDPOINT: https://s3.gra.io.cloud.ovh.net
       S3_REGION: gra
       S3_BUCKET: vvaves-prod-audio
