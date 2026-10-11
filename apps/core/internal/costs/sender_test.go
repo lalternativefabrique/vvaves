@@ -59,3 +59,47 @@ func TestBackoffGrowsAndIsCapped(t *testing.T) {
 		t.Fatalf("backoff = %v %v %v", backoff(0), backoff(1), backoff(30))
 	}
 }
+
+func TestPutClientRegistersTheKeyUnderItsID(t *testing.T) {
+	var method, path, auth string
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path, auth = r.Method, r.URL.Path, r.Header.Get("Authorization")
+		_ = json.NewDecoder(r.Body).Decode(&got)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	at := time.Date(2026, 10, 11, 0, 0, 0, 0, time.UTC)
+	if err := (Lungor{URL: srv.URL, AppKey: "k"}).PutClient(context.Background(), "ak_1", "synthiz-prod", &at); err != nil {
+		t.Fatal(err)
+	}
+	if method != http.MethodPut || path != "/api/v1/metering/clients/ak_1" || auth != "Bearer k" {
+		t.Fatalf("%s %s %s", method, path, auth)
+	}
+	if got["name"] != "synthiz-prod" || got["revoked_at"] != "2026-10-11T00:00:00Z" {
+		t.Fatalf("body = %v", got)
+	}
+}
+
+func TestPutClientSendsANullRevocationForAnActiveKey(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&got)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+	_ = Lungor{URL: srv.URL, AppKey: "k"}.PutClient(context.Background(), "ak_1", "n", nil)
+	if v, ok := got["revoked_at"]; !ok || v != nil {
+		t.Fatalf("revoked_at = %v (present %v), want null", v, ok)
+	}
+}
+
+func TestPutClientRetriesALungorWithoutTheRoute(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+	err := Lungor{URL: srv.URL, AppKey: "k"}.PutClient(context.Background(), "ak_1", "n", nil)
+	if err == nil || errors.Is(err, errRejected) {
+		t.Fatalf("err = %v, want a retry", err)
+	}
+}
