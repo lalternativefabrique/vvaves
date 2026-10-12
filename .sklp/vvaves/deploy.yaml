@@ -13,7 +13,7 @@ registries:
 
 services:
   app:
-    image: rg.fr-par.scw.cloud/vvaves/core:20261004-0458-37025b0f5579
+    image: rg.fr-par.scw.cloud/vvaves/core:20261011-1742-549a1967d442
     port: 8080
     depends_on: [migrate, postgres, searxng, tts, nats]
     env:
@@ -56,7 +56,7 @@ services:
       timeout: 60s
 
   web:
-    image: rg.fr-par.scw.cloud/vvaves/web:20261004-0458-37025b0f5579
+    image: rg.fr-par.scw.cloud/vvaves/web:20261011-1712-37e2bc6089be
     port: 5273
     depends_on: [app]
     env:
@@ -178,7 +178,7 @@ services:
       timeout: 120s
 
   tts:
-    image: rg.fr-par.scw.cloud/vvaves/tts:20261004-0458-37025b0f5579
+    image: rg.fr-par.scw.cloud/vvaves/tts:20261011-1031-d0ea6960503d
     port: 5000
     env:
       LISTEN_ADDR: 0.0.0.0:5000
@@ -212,7 +212,7 @@ jobs:
       AWS_DEFAULT_REGION: gra
 
   migrate:
-    image: rg.fr-par.scw.cloud/vvaves/migrate:20261004-0458-37025b0f5579
+    image: rg.fr-par.scw.cloud/vvaves/migrate:20261011-1742-549a1967d442
     command:
       [
         "postgres://vvaves:${POSTGRES_PASSWORD}@postgres:5432/vvaves?sslmode=disable",
