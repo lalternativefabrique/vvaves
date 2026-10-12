@@ -19,8 +19,8 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/auth':
-        specifier: ^2.0.0
-        version: 2.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: ^2.8.0
+        version: 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/keys':
         specifier: 0.3.0
         version: 0.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -282,8 +282,8 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@lalternative/auth@2.0.0':
-    resolution: {integrity: sha512-lfGGwnXb1eEE5wIaerjVPDSL/KyJ9vON+IhRcgqF0MmbQCm3yq4aP9SLNpg/cBaRP+WBceBhR4f27FSVVax8ZQ==}
+  '@lalternative/auth@2.8.0':
+    resolution: {integrity: sha512-yuxC2W/8mtjthoI4xCAH11s2dc3jw2nfjftTWC8FkN3+nQJQDKA74hyeDreihkHtzZfhFHDCNQtDnCQQdyzwlg==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -297,11 +297,11 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@lalternative/nakoda-sdk-browser@0.1.0':
-    resolution: {integrity: sha512-/fPekJcIbJxdDeQAWLLfYw/28LTnypsAaEu/HqPUoEDMQejW19BMIoDaSNf20EHZgMfFniX3C87wmm9xwjZ90w==}
+  '@lalternative/nakoda-sdk-browser@0.2.0':
+    resolution: {integrity: sha512-8EstwvKiC+zZHhE8I7ZnpIFUGXIrpsd5kQts4cvXSMXlKj7EP5obyp8mJ37psI6suF+3LB2ufKLpUh+A8kRvgw==}
 
-  '@lalternative/nakoda-sdk-react@0.1.1':
-    resolution: {integrity: sha512-fIwkWvlNAgJ1ZT+JRM62AEN3C6+rTnbfZj7BDlV3dvxt5nukjUMnwTiTWlBO8k9QXfqP7PasD/vZ6XOJJz4Hwg==}
+  '@lalternative/nakoda-sdk-react@0.2.0':
+    resolution: {integrity: sha512-C3mT+bEbn90jFaAEsTX0ngPGvGxh+r3IJrp+/SpxGOJgXcoHF+meMJRGeWQE5m8kzZC9xRZrSg2CvUK2FXBYBw==}
     peerDependencies:
       react: '>=18'
 
@@ -2447,10 +2447,10 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@lalternative/auth@2.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@lalternative/auth@2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@lalternative/nakoda-sdk-browser': 0.1.0
-      '@lalternative/nakoda-sdk-react': 0.1.1(react@19.2.8)
+      '@lalternative/nakoda-sdk-browser': 0.2.0
+      '@lalternative/nakoda-sdk-react': 0.2.0(react@19.2.8)
       react: 19.2.8
     optionalDependencies:
       react-dom: 19.2.8(react@19.2.8)
@@ -2460,11 +2460,11 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@lalternative/nakoda-sdk-browser@0.1.0': {}
+  '@lalternative/nakoda-sdk-browser@0.2.0': {}
 
-  '@lalternative/nakoda-sdk-react@0.1.1(react@19.2.8)':
+  '@lalternative/nakoda-sdk-react@0.2.0(react@19.2.8)':
     dependencies:
-      '@lalternative/nakoda-sdk-browser': 0.1.0
+      '@lalternative/nakoda-sdk-browser': 0.2.0
       react: 19.2.8
 
   '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
