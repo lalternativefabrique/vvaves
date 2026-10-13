@@ -11,7 +11,7 @@ require (
 	github.com/lalternative/packages/go/appkeys v0.2.1
 	github.com/lalternative/packages/go/audioreader v0.2.1
 	github.com/lalternative/packages/go/eda v0.9.0
-	github.com/lalternative/packages/go/membership v0.1.0
+	github.com/lalternative/packages/go/membership v0.3.1
 	github.com/lalternative/packages/go/svcauth v0.6.0
 	github.com/lalternative/packages/go/tts v0.6.0
 	github.com/lalternative/packages/go/websession v0.2.0
