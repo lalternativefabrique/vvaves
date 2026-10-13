@@ -13,14 +13,6 @@ import (
 type Config struct {
 	Addr string
 
-	// NatsURL, read from NATS_URL, points the page cache at a JetStream KV
-	// bucket every replica shares. Empty keeps the cache in this process.
-	// FetchCacheMaxBytes bounds the shared bucket, read from
-	// FETCH_CACHE_MAX_BYTES; JetStream evicts the oldest pages past it.
-	// CrawlMaxRunes bounds each rendering of a crawled page, read from
-	// CRAWL_MAX_RUNES. CrawlMaxBytes bounds the bucket crawled pages wait in,
-	// read from CRAWL_MAX_BYTES.
-
 	// TTSProvider is "mistral" or "elevenlabs" to read through that hosted
 	// API; empty speaks the OpenAI protocol to TTSURL, the self-hosted
 	// speech server.
@@ -61,7 +53,7 @@ type Config struct {
 	// registry existed.
 	DatabaseURL string
 	// The suite's shared bus, where urbangate publishes account deletions
-	// (its ADR 0006); NATS_URL stays this space's own.
+	// (its ADR 0006).
 	SuiteNATSURL      string
 	SuiteNATSUser     string
 	SuiteNATSPassword string
