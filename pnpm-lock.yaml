@@ -19,8 +19,8 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/auth':
-        specifier: ^2.9.0
-        version: 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: ^2.11.0
+        version: 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@lalternative/keys':
         specifier: 0.3.0
         version: 0.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -282,8 +282,8 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@lalternative/auth@2.9.0':
-    resolution: {integrity: sha512-1VRH22NlXcqJcPuaVrOAgTK5SAbLD09kloWB15BqFCu5pO7YooZHFkb8XWgN+9d6YpshkShh46u/0XtPiibC1Q==}
+  '@lalternative/auth@2.11.0':
+    resolution: {integrity: sha512-bEFGaf0nISAlSJ2fUEeMEJ3W9fgjZ35gNGrAnL+DNSHWv8q80iV5fjMZFEd2XEa2v2+RuwIhCQXszjb25Ei6vw==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -2447,7 +2447,7 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@lalternative/auth@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@lalternative/auth@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@lalternative/nakoda-sdk-browser': 0.2.0
       '@lalternative/nakoda-sdk-react': 0.2.0(react@19.2.8)
