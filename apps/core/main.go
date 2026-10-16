@@ -434,7 +434,7 @@ func buildTranscriptions(ctx context.Context, cfg config.Config, pool *pgxpool.P
 		Concurrency: cfg.TranscriptionConcurrency,
 		Timeout:     cfg.TranscriptionTimeout,
 		MaxDuration: time.Duration(cfg.TranscriptionMaxMinutes) * time.Minute,
-		CostCode:    "stt/" + model + ".seconds",
+		CostCode:    "transcription.seconds",
 	}, slog.Default())
 	go svc.Run(ctx)
 	return svc
