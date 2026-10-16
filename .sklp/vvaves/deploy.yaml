@@ -327,6 +327,10 @@ spaces:
           kind: expensive
           security_headers: true
           timeout: 150s
+        - service: app
+          host: vvaves.dev
+          path: /transcriptions
+          security_headers: true
         - service: web
           host: vvaves.dev
           path: /
