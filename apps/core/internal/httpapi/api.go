@@ -57,6 +57,8 @@ type Deps struct {
 	PublicURL string
 	// Transcriber turns recordings into text. Nil answers /transcribe 503.
 	Transcriber Transcriber
+	// Transcriptions runs long transcriptions. Nil answers /transcriptions 503.
+	Transcriptions Transcriptions
 }
 
 type Voice struct {
@@ -75,6 +77,8 @@ func New(d Deps) *http.ServeMux {
 	mux.Handle("POST /speak/exists", handleExists(d))
 	mux.Handle("POST /speak/sign", handleSign(d))
 	mux.Handle("POST /transcribe", handleTranscribe(d))
+	mux.Handle("POST /transcriptions", handleCreateTranscription(d))
+	mux.Handle("GET /transcriptions/{id}", handleGetTranscription(d))
 	return mux
 }
 

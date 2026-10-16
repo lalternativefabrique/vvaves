@@ -51,6 +51,8 @@ import (
 	"github.com/lalternativefabrique/vvaves/core/internal/httpapi"
 	"github.com/lalternativefabrique/vvaves/core/internal/keyvoice"
 	"github.com/lalternativefabrique/vvaves/core/internal/stt"
+	"github.com/lalternativefabrique/vvaves/core/internal/transcribe"
+	"github.com/lalternativefabrique/vvaves/core/internal/transcription"
 	keysapi "github.com/lalternativefabrique/vvaves/core/keys"
 	"github.com/lalternativefabrique/vvaves/core/middleware"
 	"github.com/lalternativefabrique/vvaves/core/pkg/db"
@@ -99,6 +101,9 @@ func main() {
 		deps.Transcriber = whisper
 	} else {
 		log.Print("vvaves: STT_API_KEY is unset, /transcribe answers 503")
+	}
+	if jobs := buildTranscriptions(lifecycle, cfg, pool, recorder); jobs != nil {
+		deps.Transcriptions = jobs
 	}
 	if cfg.SpeakUnguarded {
 		log.Print("vvaves: SPEAK_UNGUARDED, the speak routes answer anyone who reaches them")
@@ -400,6 +405,66 @@ func consumeDeletions(ctx context.Context, cfg config.Config, members *membershi
 		StreamProvisioned: true,
 		Logger:            edalogger.NewJSONSlogLogger(slog.LevelInfo),
 	})
+}
+
+// buildTranscriptions runs long transcriptions on the provider /transcribe
+// uses. Without a database the jobs live in memory and a restart drops them;
+// without the suite bus they are only readable by id.
+func buildTranscriptions(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, recorder costs.Recorder) *transcription.Service {
+	if strings.TrimSpace(cfg.STTAPIKey) == "" {
+		log.Print("vvaves: STT_API_KEY is unset, /transcriptions answers 503")
+		return nil
+	}
+	url, model := cfg.STTURL, cfg.STTModel
+	if url == "" {
+		url = stt.DefaultURL
+	}
+	if model == "" {
+		model = stt.DefaultModel
+	}
+	var store transcription.Store
+	if pool != nil {
+		store = transcription.NewPGStore(pool)
+	} else {
+		log.Print("vvaves: no DATABASE_URL, transcriptions are kept in memory and lost on restart")
+		store = transcription.NewMemoryStore()
+	}
+	engine := transcribe.New(transcribe.NewOpenAIProvider(transcribe.OpenAIConfig{URL: url, APIKey: cfg.STTAPIKey, Model: model}))
+	svc := transcription.New(store, engine, suitePublisher(cfg), recorder, transcription.Config{
+		Concurrency: cfg.TranscriptionConcurrency,
+		Timeout:     cfg.TranscriptionTimeout,
+		MaxDuration: time.Duration(cfg.TranscriptionMaxMinutes) * time.Minute,
+		CostCode:    "stt/" + model + ".seconds",
+	}, slog.Default())
+	go svc.Run(ctx)
+	return svc
+}
+
+// suitePublisher is nil without a suite bus: transcriptions still run, and
+// are read by id. A bus that cannot be reached yet keeps reconnecting.
+func suitePublisher(cfg config.Config) transcription.Publisher {
+	if cfg.SuiteNATSURL == "" {
+		log.Print("vvaves: SUITE_NATS_URL is unset, transcription events are not published")
+		return nil
+	}
+	opts := []nats.Option{nats.MaxReconnects(-1), nats.ReconnectWait(2 * time.Second), nats.Name("vvaves-core-events"), nats.RetryOnFailedConnect(true)}
+	if cfg.SuiteNATSUser != "" {
+		opts = append(opts, nats.UserInfo(cfg.SuiteNATSUser, cfg.SuiteNATSPassword))
+	}
+	nc, err := nats.Connect(cfg.SuiteNATSURL, opts...)
+	if err != nil {
+		log.Printf("vvaves: suite bus: %v (retrying in the background)", err)
+	}
+	if nc == nil {
+		log.Print("vvaves: suite bus unavailable, transcription events are not published")
+		return nil
+	}
+	js, err := transcription.NewJetStream(nc)
+	if err != nil {
+		log.Printf("vvaves: %v, transcription events are not published", err)
+		return nil
+	}
+	return js
 }
 
 func buildRegistry(cfg config.Config, pool *pgxpool.Pool) (*registry.Service, *registry.KeySource) {

@@ -59,6 +59,49 @@ definitions:
       text:
         type: string
     type: object
+  httpapi.transcriptionAccepted:
+    properties:
+      id:
+        example: 5b0e7c1a-3f7e-4d55-9a57-2f9d1c6e0b41
+        type: string
+    type: object
+  httpapi.transcriptionRequest:
+    properties:
+      language:
+        description: Language is an ISO code; empty lets the model detect it.
+        example: fr
+        type: string
+      reference:
+        description: Reference is the caller's own id for the recording, echoed in
+          the events.
+        example: episode-42
+        type: string
+      url:
+        description: URL the audio is fetched from, https only; a presigned GET works.
+        example: https://bucket.s3.fr-par.scw.cloud/episode.mp3?X-Amz-Signature=...
+        type: string
+    type: object
+  httpapi.transcriptionResponse:
+    properties:
+      created_at:
+        type: string
+      error:
+        type: string
+      finished_at:
+        type: string
+      id:
+        type: string
+      reference:
+        type: string
+      result:
+        $ref: '#/definitions/transcription.Result'
+      status:
+        enum:
+        - pending
+        - completed
+        - failed
+        type: string
+    type: object
   keys.CreateKeyRequest:
     properties:
       label:
@@ -161,6 +204,28 @@ definitions:
   registry.RegisterRequest:
     properties:
       name:
+        type: string
+    type: object
+  transcription.Result:
+    properties:
+      duration_seconds:
+        type: number
+      language:
+        type: string
+      segments:
+        items:
+          $ref: '#/definitions/transcription.Segment'
+        type: array
+      text:
+        type: string
+    type: object
+  transcription.Segment:
+    properties:
+      end_seconds:
+        type: number
+      start_seconds:
+        type: number
+      text:
         type: string
     type: object
 info:
@@ -596,6 +661,75 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.errorResponse'
       summary: Turn a recording into text
+      tags:
+      - transcribe
+  /transcriptions:
+    post:
+      consumes:
+      - application/json
+      description: Takes the credentials /transcribe takes. The result is announced
+        on the suite bus as events.vvaves.transcription.completed (or .failed), and
+        can be read from GET /transcriptions/{id}.
+      operationId: createTranscription
+      parameters:
+      - description: Recording to transcribe
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.transcriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/httpapi.transcriptionAccepted'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      summary: Transcribe a long recording in the background
+      tags:
+      - transcribe
+  /transcriptions/{id}:
+    get:
+      description: Only the application that submitted it can read it.
+      operationId: getTranscription
+      parameters:
+      - description: Transcription id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.transcriptionResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      summary: Read a background transcription
       tags:
       - transcribe
 securityDefinitions:

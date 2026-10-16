@@ -30,10 +30,15 @@ type Config struct {
 	STTURL    string
 	STTAPIKey string
 	STTModel  string
-	TTSURL    string
-	TTSAPIKey string
-	TTSModel  string
-	TTSVoice  string
+	// TranscriptionConcurrency, TranscriptionTimeout and
+	// TranscriptionMaxMinutes bound the background /transcriptions jobs.
+	TranscriptionConcurrency int
+	TranscriptionTimeout     time.Duration
+	TranscriptionMaxMinutes  int
+	TTSURL                   string
+	TTSAPIKey                string
+	TTSModel                 string
+	TTSVoice                 string
 	// TTSVoices reads a listener in a voice of their language and, when one
 	// is declared for it, of the gender they asked for. TTS_VOICES holds
 	// "lang:voice" and "lang:gender:voice" entries ("fr:abc,fr:male:def"),
@@ -110,12 +115,17 @@ func Load() Config {
 		STTURL:      os.Getenv("STT_URL"),
 		STTAPIKey:   os.Getenv("STT_API_KEY"),
 		STTModel:    os.Getenv("STT_MODEL"),
-		TTSURL:      os.Getenv("PIPER_URL"),
-		TTSAPIKey:   os.Getenv("TTS_API_KEY"),
-		TTSModel:    os.Getenv("TTS_MODEL"),
-		TTSVoice:    os.Getenv("TTS_VOICE"),
-		TTSVoices:   envVoices("TTS_VOICES"),
-		TTSFormat:   env("TTS_FORMAT", "mp3"),
+
+		TranscriptionConcurrency: envInt("TRANSCRIPTION_CONCURRENCY", 2),
+		TranscriptionTimeout:     envDuration("TRANSCRIPTION_TIMEOUT_MS", 90*time.Minute),
+		TranscriptionMaxMinutes:  envInt("TRANSCRIPTION_MAX_MINUTES", 120),
+
+		TTSURL:    os.Getenv("PIPER_URL"),
+		TTSAPIKey: os.Getenv("TTS_API_KEY"),
+		TTSModel:  os.Getenv("TTS_MODEL"),
+		TTSVoice:  os.Getenv("TTS_VOICE"),
+		TTSVoices: envVoices("TTS_VOICES"),
+		TTSFormat: env("TTS_FORMAT", "mp3"),
 		// WholeText sends every text as one request: the speech server takes any
 		// length, cuts by sentence itself and streams each one as it is read,
 		// so a cut here only adds requests, and each one a prompt prefill and
