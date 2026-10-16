@@ -35,6 +35,7 @@ type Config struct {
 	TranscriptionConcurrency int
 	TranscriptionTimeout     time.Duration
 	TranscriptionMaxMinutes  int
+	TranscriptionCostCode    string
 	TTSURL                   string
 	TTSAPIKey                string
 	TTSModel                 string
@@ -119,6 +120,7 @@ func Load() Config {
 		TranscriptionConcurrency: envInt("TRANSCRIPTION_CONCURRENCY", 2),
 		TranscriptionTimeout:     envDuration("TRANSCRIPTION_TIMEOUT_MS", 90*time.Minute),
 		TranscriptionMaxMinutes:  envInt("TRANSCRIPTION_MAX_MINUTES", 120),
+		TranscriptionCostCode:    os.Getenv("TRANSCRIPTION_COST_CODE"),
 
 		TTSURL:    os.Getenv("PIPER_URL"),
 		TTSAPIKey: os.Getenv("TTS_API_KEY"),

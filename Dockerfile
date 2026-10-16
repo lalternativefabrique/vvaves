@@ -19,6 +19,8 @@ COPY --from=build /out/vvaves /usr/local/bin/vvaves
 # poppler-utils is pdftotext and pdfinfo, which /fetch reads PDFs with.
 # ffmpeg (with ffprobe) measures and splits the recordings /transcriptions reads.
 # The upgrade pulls Ubuntu security fixes the pinned Playwright base predates.
+# The base ships a global npm whose bundled deps carry fixable HIGH CVEs; the
+# service never runs npm, so it goes rather than being ignored.
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends poppler-utils ffmpeg \
@@ -26,7 +28,8 @@ RUN apt-get update \
       gstreamer1.0-plugins-bad \
       libgstreamer-plugins-bad1.0-0 \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/lib/node_modules/npm /usr/bin/npm /usr/bin/npx
 
 # This service renders arbitrary third-party JavaScript; a compromised render
 # should not run as root in its own container.
