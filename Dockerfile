@@ -14,18 +14,22 @@ COPY --from=build /out/vvaves /usr/local/bin/vvaves
 
 # GStreamer carries CVE-2025-3887 (H265 parsing, remote code execution) with no
 # fixed version published, which fails the publish scan. It is Chromium's video
-# decoding path: this service renders HTML and reads no media, so the
+# decoding path: Chromium here renders HTML and plays no media, so the
 # dependency buys nothing here and removing it beats ignoring the finding.
 # poppler-utils is pdftotext and pdfinfo, which /fetch reads PDFs with.
+# ffmpeg (with ffprobe) measures and splits the recordings /transcriptions reads.
 # The upgrade pulls Ubuntu security fixes the pinned Playwright base predates.
+# The base ships a global npm whose bundled deps carry fixable HIGH CVEs; the
+# service never runs npm, so it goes rather than being ignored.
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
-    && apt-get install -y --no-install-recommends poppler-utils \
+    && apt-get install -y --no-install-recommends poppler-utils ffmpeg \
     && apt-get remove -y --purge \
       gstreamer1.0-plugins-bad \
       libgstreamer-plugins-bad1.0-0 \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/lib/node_modules/npm /usr/bin/npm /usr/bin/npx
 
 # This service renders arbitrary third-party JavaScript; a compromised render
 # should not run as root in its own container.

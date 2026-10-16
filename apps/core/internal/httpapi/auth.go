@@ -76,21 +76,19 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) (string, error
 
 // guardService admits only a service credential: a signed listener URL buys a
 // reading, never a transcription.
-func (d Deps) guardService(r *http.Request, scope string) error {
+func (d Deps) guardService(r *http.Request, scope string) (string, error) {
 	if d.Unguarded {
-		return nil
+		return "", nil
 	}
 	if raw, ok := svcauth.BearerToken(r); ok {
 		if strings.HasPrefix(raw, customerKeyPrefix) {
-			_, err := d.guardCustomerKey(r.Context(), raw, scope)
-			return err
+			return d.guardCustomerKey(r.Context(), raw, scope)
 		}
 		if d.Tokens != nil {
-			_, err := d.guardServiceToken(r.Context(), raw, scope)
-			return err
+			return d.guardServiceToken(r.Context(), raw, scope)
 		}
 	}
-	return ErrBadToken
+	return "", ErrBadToken
 }
 
 func (d Deps) guardServiceToken(ctx context.Context, raw, scope string) (string, error) {

@@ -41,7 +41,7 @@ func handleTranscribe(d Deps) http.HandlerFunc {
 			writeError(w, http.StatusServiceUnavailable, "transcription is not configured")
 			return
 		}
-		if err := d.guardService(r, ScopeTranscribe); err != nil {
+		if _, err := d.guardService(r, ScopeTranscribe); err != nil {
 			writeAuthError(w, err)
 			return
 		}

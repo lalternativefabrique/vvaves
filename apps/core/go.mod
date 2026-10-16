@@ -7,9 +7,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.2
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.110.0
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/lalternative/packages/go/appkeys v0.2.1
 	github.com/lalternative/packages/go/audioreader v0.2.1
+	github.com/lalternative/packages/go/busevents v0.1.0
 	github.com/lalternative/packages/go/eda v0.9.0
 	github.com/lalternative/packages/go/membership v0.3.2
 	github.com/lalternative/packages/go/svcauth v0.6.0
@@ -43,14 +45,12 @@ require (
 	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/lalternative/packages/go/busevents v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/nats-io/nkeys v0.4.16 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect

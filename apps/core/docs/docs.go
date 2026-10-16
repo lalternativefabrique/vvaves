@@ -659,6 +659,107 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/transcriptions": {
+            "post": {
+                "description": "Takes the credentials /transcribe takes. The result is announced on the suite bus as events.vvaves.transcription.completed (or .failed), and can be read from GET /transcriptions/{id}.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transcribe"
+                ],
+                "summary": "Transcribe a long recording in the background",
+                "operationId": "createTranscription",
+                "parameters": [
+                    {
+                        "description": "Recording to transcribe",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.transcriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.transcriptionAccepted"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transcriptions/{id}": {
+            "get": {
+                "description": "Only the application that submitted it can read it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transcribe"
+                ],
+                "summary": "Read a background transcription",
+                "operationId": "getTranscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Transcription id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.transcriptionResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -733,6 +834,66 @@ const docTemplate = `{
             "properties": {
                 "text": {
                     "type": "string"
+                }
+            }
+        },
+        "httpapi.transcriptionAccepted": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "5b0e7c1a-3f7e-4d55-9a57-2f9d1c6e0b41"
+                }
+            }
+        },
+        "httpapi.transcriptionRequest": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "description": "Language is an ISO code; empty lets the model detect it.",
+                    "type": "string",
+                    "example": "fr"
+                },
+                "reference": {
+                    "description": "Reference is the caller's own id for the recording, echoed in the events.",
+                    "type": "string",
+                    "example": "episode-42"
+                },
+                "url": {
+                    "description": "URL the audio is fetched from, https only; a presigned GET works.",
+                    "type": "string",
+                    "example": "https://bucket.s3.fr-par.scw.cloud/episode.mp3?X-Amz-Signature=..."
+                }
+            }
+        },
+        "httpapi.transcriptionResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "finished_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/transcription.Result"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "completed",
+                        "failed"
+                    ]
                 }
             }
         },
@@ -893,6 +1054,40 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "transcription.Result": {
+            "type": "object",
+            "properties": {
+                "duration_seconds": {
+                    "type": "number"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "segments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transcription.Segment"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "transcription.Segment": {
+            "type": "object",
+            "properties": {
+                "end_seconds": {
+                    "type": "number"
+                },
+                "start_seconds": {
+                    "type": "number"
+                },
+                "text": {
                     "type": "string"
                 }
             }
