@@ -15,7 +15,7 @@ services:
   app:
     image: rg.fr-par.scw.cloud/vvaves/core:20261011-1742-549a1967d442
     port: 8080
-    depends_on: [migrate, postgres, searxng, tts, nats]
+    depends_on: [migrate, postgres, searxng, tts]
     env:
       LISTEN_ADDR: ":8080"
       SPEAK_PUBLIC_URL: https://vvaves.dev
@@ -26,7 +26,6 @@ services:
       URBANGATE_PROVISIONER_CLIENT_ID: vvaves-provisioner
       URBANGATE_PROVISIONER_CLIENT_SECRET: ${URBANGATE_PROVISIONER_CLIENT_SECRET}
       SEARXNG_URL: http://searxng:8080
-      NATS_URL: nats://nats:4222
       SUITE_NATS_URL: nats://nats.nats-global.internal:4222
       SUITE_NATS_USER: vvaves
       SUITE_NATS_PASSWORD: ${NATS_GLOBAL_PASSWORD}
@@ -148,23 +147,6 @@ services:
       tcp: "6379"
       timeout: 60s
 
-  nats:
-    image: nats:2.12-alpine
-    port: 4222
-    volumes: ["nats-data:/data"]
-    command: ["nats-server", "-js", "-sd", "/data"]
-    env:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
-      AWS_DEFAULT_REGION: gra
-      SKLP_BACKUP_TO: https://s3.gra.io.cloud.ovh.net/vvaves-prod-backups/nats/
-    resources:
-      cpu: "250m"
-      memory: 256M
-    ready:
-      log: "Server is ready"
-      timeout: 30s
-
   searxng:
     image: docker.io/searxng/searxng@sha256:e45d5894bfaa0bf8773b9f283795ae57f1c15ddb29c8cecb70b3665b0ce9ec60
     port: 8080
@@ -198,19 +180,6 @@ services:
       timeout: 600s
 
 jobs:
-  nats-backup:
-    image: rg.fr-par.scw.cloud/skalpai/platform/nats-backup:20260926-1355-22a28bbe6ef4
-    schedule: "15 * * * *"
-    depends_on:
-      - nats
-    env:
-      NATS_URL: nats://nats:4222
-      S3_BUCKET: vvaves-prod-backups
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
-      AWS_ENDPOINT_URL: https://s3.gra.io.cloud.ovh.net
-      AWS_DEFAULT_REGION: gra
-
   migrate:
     image: rg.fr-par.scw.cloud/vvaves/migrate:20261011-1742-549a1967d442
     command:
