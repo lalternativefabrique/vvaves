@@ -103,3 +103,15 @@ func TestMeteredIsOffWithoutACode(t *testing.T) {
 		t.Fatal("want the provider unwrapped")
 	}
 }
+
+func TestMeteredDeclaresTheEndUserThePayerNamed(t *testing.T) {
+	var got lines
+	p := Metered(fakeProvider{}, "mistral/x.chars", &got)
+	payer := costs.Payer{Client: "ak_synthiz", EndUser: "u42"}
+	if _, _, err := p.Synthesize(context.Background(), "hello", payer.String()); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].ExternalUserID != "ak_synthiz" || got[0].EndUserID != "u42" {
+		t.Fatalf("lines = %+v", got)
+	}
+}

@@ -59,7 +59,8 @@ func handleSign(d Deps) http.HandlerFunc {
 			return
 		}
 		ar := req.request()
-		if _, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text); err != nil {
+		payer, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
@@ -70,6 +71,7 @@ func handleSign(d Deps) http.HandlerFunc {
 		expires := time.Now().Add(SigningTTL)
 		q, err := signed.Sign(SigningIssuer, d.SigningSecret, signed.Params{
 			Scope: ar.Scope, ID: ar.ID, TextHash: signed.HashText(ar.Text), Expires: expires,
+			Client: payer.Client, User: payer.EndUser,
 		})
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())

@@ -152,12 +152,12 @@ func handleSpeak(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		payer, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
 		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
-		ar.BillTo = client
+		ar.BillTo = payer.String()
 		// audioreader reads the stream flag off the query string; the body is
 		// where this API has always carried it. Both are honoured so a caller
 		// can ask either way.
@@ -212,7 +212,7 @@ func handlePrime(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		payer, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
 		if err != nil {
 			writeAuthError(w, err)
 			return
@@ -220,7 +220,7 @@ func handlePrime(d Deps) http.HandlerFunc {
 		go func() {
 			// Detached: this outlives the 202 by design, and the request's
 			// context is torn down the moment that answer lands.
-			ctx, cancel := context.WithTimeout(costs.WithClient(context.Background(), client), primeTimeout)
+			ctx, cancel := context.WithTimeout(costs.WithClient(context.Background(), payer.String()), primeTimeout)
 			defer cancel()
 			if err := voice.Primer.PrimeOpening(ctx, ar.Scope, ar.ID, ar.Text); err != nil {
 				log.Printf("vvaves: prime %s/%s: %v", ar.Scope, ar.ID, err)
@@ -265,12 +265,12 @@ func handlePregenerate(d Deps) http.HandlerFunc {
 		}
 
 		ar := req.request()
-		client, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
+		payer, err := d.guardSpeak(r, ar.Scope, ar.ID, ar.Text)
 		if err != nil {
 			writeAuthError(w, err)
 			return
 		}
-		ar.BillTo = client
+		ar.BillTo = payer.String()
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), primeTimeout)
 			defer cancel()

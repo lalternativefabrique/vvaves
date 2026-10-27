@@ -62,7 +62,7 @@ func handleCreateTranscription(d Deps) http.HandlerFunc {
 			writeError(w, http.StatusServiceUnavailable, "transcription is not configured")
 			return
 		}
-		app, err := d.guardService(r, ScopeTranscribe)
+		payer, err := d.servicePayer(r, ScopeTranscribe)
 		if err != nil {
 			writeAuthError(w, err)
 			return
@@ -73,7 +73,8 @@ func handleCreateTranscription(d Deps) http.HandlerFunc {
 			return
 		}
 		job, err := d.Transcriptions.Submit(r.Context(), transcription.Request{
-			App:       app,
+			App:       payer.Client,
+			EndUser:   payer.EndUser,
 			URL:       body.URL,
 			Language:  body.Language,
 			Reference: body.Reference,
