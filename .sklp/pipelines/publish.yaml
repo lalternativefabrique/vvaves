@@ -35,6 +35,7 @@ scopes:
 steps:
   - name: app-image
     kind: publish
+    platform: linux/amd64
     scope: [app]
     context: .
     dockerfile: Dockerfile
@@ -43,6 +44,7 @@ steps:
 
   - name: web-image
     kind: publish
+    platform: linux/amd64
     scope: [web]
     context: .
     dockerfile: Dockerfile.web
@@ -51,6 +53,7 @@ steps:
 
   - name: migrate-image
     kind: publish
+    platform: linux/amd64
     scope: [migrate]
     scan: false
     context: apps/migrations
@@ -60,6 +63,7 @@ steps:
 
   - name: tts-image
     kind: publish
+    platform: linux/amd64
     scope: [tts]
     context: .
     dockerfile: Dockerfile.tts
