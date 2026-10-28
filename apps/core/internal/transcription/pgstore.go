@@ -21,16 +21,16 @@ func NewPGStore(pool *pgxpool.Pool) *PGStore {
 
 func (s *PGStore) Create(ctx context.Context, j Job) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO transcription_job (id, app, reference, url, language, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		j.ID, j.App, j.Reference, j.URL, j.Language, j.Status, j.CreatedAt)
+		INSERT INTO transcription_job (id, app, end_user, reference, url, language, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		j.ID, j.App, j.EndUser, j.Reference, j.URL, j.Language, j.Status, j.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("create transcription %s: %w", j.ID, err)
 	}
 	return nil
 }
 
-const jobColumns = `id, app, reference, url, language, status, error, result, created_at, finished_at`
+const jobColumns = `id, app, end_user, reference, url, language, status, error, result, created_at, finished_at`
 
 func (s *PGStore) Get(ctx context.Context, id string) (Job, error) {
 	j, err := scanJob(s.pool.QueryRow(ctx, `SELECT `+jobColumns+` FROM transcription_job WHERE id = $1`, id))
@@ -86,7 +86,7 @@ func (s *PGStore) finish(ctx context.Context, id, query string, args ...any) err
 func scanJob(row pgx.Row) (Job, error) {
 	var j Job
 	var result []byte
-	if err := row.Scan(&j.ID, &j.App, &j.Reference, &j.URL, &j.Language, &j.Status, &j.Error, &result, &j.CreatedAt, &j.FinishedAt); err != nil {
+	if err := row.Scan(&j.ID, &j.App, &j.EndUser, &j.Reference, &j.URL, &j.Language, &j.Status, &j.Error, &result, &j.CreatedAt, &j.FinishedAt); err != nil {
 		return Job{}, err
 	}
 	if result != nil {

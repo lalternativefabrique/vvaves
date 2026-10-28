@@ -97,6 +97,7 @@ func (s *Service) Submit(ctx context.Context, r Request) (Job, error) {
 	j := Job{
 		ID:        uuid.NewString(),
 		App:       r.App,
+		EndUser:   r.EndUser,
 		Reference: r.Reference,
 		URL:       r.URL,
 		Language:  r.Language,
@@ -248,6 +249,7 @@ func (s *Service) meter(ctx context.Context, j Job, r Result, at time.Time) {
 		OccurredAt:     at,
 		IdempotencyKey: j.ID + ".seconds",
 		ExternalUserID: j.App,
+		EndUserID:      j.EndUser,
 	}
 	if err := s.recorder.Record(ctx, line); err != nil {
 		s.log.Error("transcription cost not recorded", "id", j.ID, "seconds", line.Quantity, "error", err)

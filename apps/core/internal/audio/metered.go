@@ -40,7 +40,7 @@ type metered struct {
 // Metered declares the characters of every call that reaches the provider.
 // A cache hit never calls the provider, so it is never declared.
 //
-// The client comes from billTo, set by the reader, or from ctx: the primer
+// The payer (costs.Payer) comes from billTo, set by the reader, or from ctx: the primer
 // passes no billTo, and the reader synthesizes on a background context.
 func Metered(next audioreader.Provider, code string, recorder costs.Recorder) audioreader.Provider {
 	if next == nil || code == "" || recorder == nil {
@@ -78,21 +78,22 @@ func (m metered) declare(ctx context.Context, text, billTo string, at time.Time)
 	if n == 0 {
 		return
 	}
-	client := billTo
-	if client == "" {
-		client = costs.ClientFrom(ctx)
+	if billTo == "" {
+		billTo = costs.ClientFrom(ctx)
 	}
+	payer := costs.ParsePayer(billTo)
 	line := costs.Line{
 		Code:           m.code,
 		Quantity:       int64(n),
 		OccurredAt:     at.UTC(),
 		IdempotencyKey: callID() + ".chars",
-		ExternalUserID: client,
+		ExternalUserID: payer.Client,
+		EndUserID:      payer.EndUser,
 	}
 	// Detached: the reading is done, and a listener who left must not cancel
 	// the record of what it cost.
 	if err := m.recorder.Record(context.WithoutCancel(ctx), line); err != nil {
-		log.Printf("vvaves: cost not recorded, %d chars on %s for %q: %v", n, m.code, client, err)
+		log.Printf("vvaves: cost not recorded, %d chars on %s for %q: %v", n, m.code, payer.Client, err)
 	}
 }
 

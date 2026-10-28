@@ -112,7 +112,7 @@ func TestCompletedJobIsStoredMeteredAndAnnounced(t *testing.T) {
 	s := newService(engine, pub, rec, store)
 	go s.Run(ctx)
 
-	j, err := s.Submit(ctx, Request{App: "app-1", URL: audioServer(t).URL + "/a.mp3", Reference: "ep-42"})
+	j, err := s.Submit(ctx, Request{App: "app-1", EndUser: "u42", URL: audioServer(t).URL + "/a.mp3", Reference: "ep-42"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestCompletedJobIsStoredMeteredAndAnnounced(t *testing.T) {
 		t.Fatalf("segments = %v", segs)
 	}
 	line := await(t, rec.lines)
-	if line.Quantity != 62 || line.ExternalUserID != "app-1" || line.IdempotencyKey != j.ID+".seconds" {
+	if line.Quantity != 62 || line.ExternalUserID != "app-1" || line.EndUserID != "u42" || line.IdempotencyKey != j.ID+".seconds" {
 		t.Fatalf("cost = %+v", line)
 	}
 	stored, _ := s.Get(ctx, j.ID)

@@ -43,6 +43,7 @@ type Result struct {
 type Job struct {
 	ID         string
 	App        string
+	EndUser    string
 	Reference  string
 	URL        string
 	Language   string
@@ -55,6 +56,7 @@ type Job struct {
 
 type Request struct {
 	App       string
+	EndUser   string
 	URL       string
 	Language  string
 	Reference string

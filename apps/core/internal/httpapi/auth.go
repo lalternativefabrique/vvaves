@@ -9,6 +9,8 @@ import (
 	"github.com/lalternative/packages/go/appkeys"
 	"github.com/lalternative/packages/go/svcauth"
 	"github.com/lalternative/packages/vvaves/sdk-go/signed"
+
+	"github.com/lalternativefabrique/vvaves/core/internal/costs"
 )
 
 // ScopeSpeak is the OAuth2 scope a service's token must carry to have text
@@ -44,20 +46,15 @@ var customerKeyPrefix = appkeys.KeyPrefix("vvaves")
 // vvaves that reaches the internet with no key is not an internal one, it
 // is an open voice, and silence about a missing key must not look like a
 // working service.
-func (d Deps) guardSpeak(r *http.Request, scope, id, text string) (string, error) {
+func (d Deps) guardSpeak(r *http.Request, scope, id, text string) (costs.Payer, error) {
 	if d.Unguarded {
-		return "", nil
+		return costs.Payer{}, nil
 	}
 	if d.Verifier == nil && d.Tokens == nil && d.CustomerKeys == nil {
-		return "", ErrNoGuard
+		return costs.Payer{}, ErrNoGuard
 	}
-	if raw, ok := svcauth.BearerToken(r); ok {
-		if strings.HasPrefix(raw, customerKeyPrefix) {
-			return d.guardCustomerKey(r.Context(), raw, ScopeSpeak)
-		}
-		if d.Tokens != nil {
-			return d.guardServiceToken(r.Context(), raw, ScopeSpeak)
-		}
+	if raw, ok := svcauth.BearerToken(r); ok && (strings.HasPrefix(raw, customerKeyPrefix) || d.Tokens != nil) {
+		return d.servicePayer(r, ScopeSpeak)
 	}
 	// A signature buys one reading, never the work of making one nobody is
 	// waiting for. The signed fields name what to read, not where it was
@@ -65,14 +62,39 @@ func (d Deps) guardSpeak(r *http.Request, scope, id, text string) (string, error
 	// the same URL — so a link good for playing a reply would otherwise also
 	// pregenerate whole articles, on a voice that reads one at a time.
 	if r.URL.Path != speakPath {
-		return "", ErrSignatureNotAcceptedHere
+		return costs.Payer{}, ErrSignatureNotAcceptedHere
 	}
 	q := r.URL.Query()
 	if err := d.Verifier.Verify(q, scope, id, text); err != nil {
-		return "", err
+		return costs.Payer{}, err
 	}
-	return q.Get(signed.QueryIssuer), nil
+	client := q.Get(signed.QueryIssuer)
+	if signedFor := q.Get(signed.QueryClient); client == SigningIssuer && signedFor != "" {
+		client = signedFor
+	}
+	return costs.Payer{Client: client, EndUser: q.Get(signed.QueryUser)}, nil
 }
+
+// servicePayer admits a service credential and names the end user it
+// declared, the way lalter takes one: on X-End-User-Id.
+func (d Deps) servicePayer(r *http.Request, scope string) (costs.Payer, error) {
+	user := strings.TrimSpace(r.Header.Get(EndUserHeader))
+	if (signed.Params{User: user}).Validate() != nil {
+		return costs.Payer{}, ErrBadEndUser
+	}
+	client, err := d.guardService(r, scope)
+	if err != nil {
+		return costs.Payer{}, err
+	}
+	return costs.Payer{Client: client, EndUser: user}, nil
+}
+
+// EndUserHeader names the calling application's own user a request is made
+// for; vvaves declares it to Lungor as the cost's end user.
+const EndUserHeader = "X-End-User-Id"
+
+// ErrBadEndUser is an X-End-User-Id no cost line or signature can carry.
+var ErrBadEndUser = errors.New("speak: X-End-User-Id is too long or holds a control character")
 
 // guardService admits only a service credential: a signed listener URL buys a
 // reading, never a transcription.
@@ -170,6 +192,8 @@ var ErrRevocationUnknown = errors.New("speak: no revocation list to judge the ke
 // someone whose only mistake was leaving the page open.
 func writeAuthError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, ErrBadEndUser):
+		writeError(w, http.StatusBadRequest, err.Error())
 	case errors.Is(err, signed.ErrExpired):
 		writeError(w, http.StatusUnauthorized, "signature expired")
 	case errors.Is(err, ErrIdentityProviderUnavailable):
