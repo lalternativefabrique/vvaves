@@ -26,7 +26,7 @@ services:
       URBANGATE_PROVISIONER_CLIENT_ID: vvaves-provisioner
       URBANGATE_PROVISIONER_CLIENT_SECRET: ${URBANGATE_PROVISIONER_CLIENT_SECRET}
       SEARXNG_URL: http://searxng:8080
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://app:${NATS_PASSWORD}@nats:4222
       SUITE_NATS_URL: nats://nats.nats-global.internal:4222
       SUITE_NATS_USER: vvaves
       SUITE_NATS_PASSWORD: ${NATS_GLOBAL_PASSWORD}
@@ -142,7 +142,12 @@ services:
   redis:
     image: redis:7-alpine
     port: 6379
-    command: ["redis-server", "--save", "60", "1"]
+    env:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+      - sh
+      - -c
+      - exec redis-server --save 60 1 --requirepass "$REDIS_PASSWORD"
     volumes: ["redis-data:/data"]
     ready:
       tcp: "6379"
@@ -152,12 +157,20 @@ services:
     image: nats:2.12-alpine
     port: 4222
     volumes: ["nats-data:/data"]
-    command: ["nats-server", "-js", "-sd", "/data"]
+    # The existing streams live in the default account, so auth stays a plain
+    # user list rather than named accounts, which would hide them.
+    command:
+      - sh
+      - -c
+      - >-
+        printf 'authorization { users [ { user: app, password: "%s" } ] }\n' "$NATS_PASSWORD" > /tmp/auth.conf &&
+        exec nats-server -js -sd /data -c /tmp/auth.conf
     env:
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
       AWS_DEFAULT_REGION: gra
       SKLP_BACKUP_TO: https://s3.gra.io.cloud.ovh.net/vvaves-prod-backups/nats/
+      NATS_PASSWORD: ${NATS_PASSWORD}
     resources:
       cpu: "250m"
       memory: 256M
@@ -172,7 +185,7 @@ services:
     volumes: ["searxng-config:/etc/searxng"]
     env:
       SEARXNG_BASE_URL: http://searxng:8080
-      SEARXNG_REDIS_URL: redis://redis:6379/0
+      SEARXNG_REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
     ready:
       http: /search?q=ping&format=json
       timeout: 120s
@@ -204,7 +217,7 @@ jobs:
     depends_on:
       - nats
     env:
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://app:${NATS_PASSWORD}@nats:4222
       S3_BUCKET: vvaves-prod-backups
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
