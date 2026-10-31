@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lalternative/packages/go/eda/pkg/cqrs"
+	"github.com/lalternativefabrique/eventkit/pkg/cqrs"
 
 	"github.com/lalternativefabrique/vvaves/core/registry/infrastructure"
 )

@@ -12,12 +12,12 @@ require (
 	github.com/lalternative/packages/go/appkeys v0.2.1
 	github.com/lalternative/packages/go/audioreader v0.2.1
 	github.com/lalternative/packages/go/busevents v0.1.0
-	github.com/lalternative/packages/go/eda v0.9.0
-	github.com/lalternative/packages/go/membership v0.3.2
+	github.com/lalternative/packages/go/membership v0.5.1
 	github.com/lalternative/packages/go/svcauth v0.6.0
 	github.com/lalternative/packages/go/tts v0.6.0
 	github.com/lalternative/packages/go/websession v0.2.0
 	github.com/lalternative/packages/vvaves/sdk-go v0.5.0
+	github.com/lalternativefabrique/eventkit v0.10.0
 	github.com/nats-io/nats.go v1.52.0
 	github.com/swaggo/swag v1.16.6
 )

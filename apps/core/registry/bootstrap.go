@@ -9,10 +9,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/lalternative/packages/go/eda/pkg/cqrs"
-	"github.com/lalternative/packages/go/eda/pkg/di"
-	"github.com/lalternative/packages/go/eda/pkg/logger"
-	"github.com/lalternative/packages/go/eda/pkg/obs"
+	"github.com/lalternativefabrique/eventkit/pkg/cqrs"
+	"github.com/lalternativefabrique/eventkit/pkg/di"
+	"github.com/lalternativefabrique/eventkit/pkg/logger"
+	"github.com/lalternativefabrique/eventkit/pkg/obs"
 
 	"github.com/lalternativefabrique/vvaves/core/registry/application/list_apps"
 	"github.com/lalternativefabrique/vvaves/core/registry/application/register_app"

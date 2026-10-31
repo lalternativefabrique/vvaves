@@ -85,10 +85,8 @@ github.com/lalternative/packages/go/audioreader v0.2.1 h1:J7kjvRjcer0o27hQl97Ths
 github.com/lalternative/packages/go/audioreader v0.2.1/go.mod h1:h/WIzfZgpNH9/6MX/usw1Z9IDXJneZBdNB8064ITeNg=
 github.com/lalternative/packages/go/busevents v0.1.0 h1:3jsi3zSkrzVLLWEiR0aCSQt1eqfcuH9m6y9I9nraBNM=
 github.com/lalternative/packages/go/busevents v0.1.0/go.mod h1:4ndSPTpJGJDoYWjB0HnEIMa4a6XUdgEpUFwRPo0mvLs=
-github.com/lalternative/packages/go/eda v0.9.0 h1:M8PDyK2XPPy0vKoRFZcuVPz3D0lNPbewU9gLoRjRJ6c=
-github.com/lalternative/packages/go/eda v0.9.0/go.mod h1:rEJZsWrl6SwIEPSAk+2wGzxL10N4Z+NNx6SHVKSUkE0=
-github.com/lalternative/packages/go/membership v0.3.2 h1:apW2upFSC1meHAgKz4tT0hyKa8b7PU00Q83tTZTxdtU=
-github.com/lalternative/packages/go/membership v0.3.2/go.mod h1:OIJhfHqg1OMsmcIY1cOaCLpWvAIDAhc3ohLbyFje9u4=
+github.com/lalternative/packages/go/membership v0.5.1 h1:7aSuVhtDzAY+q3G2j2/hJbMfpJ0ldHms7x35u+U7zCk=
+github.com/lalternative/packages/go/membership v0.5.1/go.mod h1:RpZW6T6iHE77p4EhdoRmEi2nQwRKDhbYtmfyEPydWoQ=
 github.com/lalternative/packages/go/svcauth v0.6.0 h1:5jWnmzTt/tHsBCKTr9qG29GOGDlFUhkUPHnHYTlNPZk=
 github.com/lalternative/packages/go/svcauth v0.6.0/go.mod h1:I3AFiK7snrcH8KgUOEI3l/1RZ3leJtM6BF3mP11wqsY=
 github.com/lalternative/packages/go/tts v0.6.0 h1:iT3VQw0jghf9dJanyf1vrXmZYKY2tTClPNPqpGEe7g0=
@@ -97,6 +95,8 @@ github.com/lalternative/packages/go/websession v0.2.0 h1:h/R4X40zOzK+jQtMlKyvwBr
 github.com/lalternative/packages/go/websession v0.2.0/go.mod h1:PH0a3YEZTRPeMCofc/rkxpnbLSOheZnWoP+7ZagdkCQ=
 github.com/lalternative/packages/vvaves/sdk-go v0.5.0 h1:SfbwPEGJJ2rVEkHDtV7587oworVfI5QrNhYXcn8H3oc=
 github.com/lalternative/packages/vvaves/sdk-go v0.5.0/go.mod h1:37Ai8amj5CjPtFmDROxAzpuwnlmk+f5WqJTcRP4hjfY=
+github.com/lalternativefabrique/eventkit v0.10.0 h1:sF9mP/8Yw5lGnEIGB9TbCp2sZLs0fTqkmts3Guhm3K0=
+github.com/lalternativefabrique/eventkit v0.10.0/go.mod h1:c0I+GMopWp7SYnUng7C4+OPJzwBMCAVd6Syz6MEHdu0=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.7.6/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
