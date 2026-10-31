@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lalternative/packages/go/eda/pkg/cqrs"
+	"github.com/lalternativefabrique/eventkit/pkg/cqrs"
 
 	"github.com/lalternativefabrique/vvaves/core/registry/application/list_apps"
 	"github.com/lalternativefabrique/vvaves/core/registry/application/register_app"
