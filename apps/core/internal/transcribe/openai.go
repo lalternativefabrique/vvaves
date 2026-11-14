@@ -63,10 +63,10 @@ func (p *OpenAIProvider) Transcribe(ctx context.Context, req TranscribeRequest) 
 	if err != nil {
 		return nil, err
 	}
-	// Word timings are an extension some compatible servers reject outright:
-	// one refusal settles it for this process, and the audio is sent again
-	// the way every server accepts.
-	if words && res.StatusCode == http.StatusBadRequest {
+	// Word timings are an extension some compatible servers reject outright,
+	// each with its own client-error code: one refusal settles it for this
+	// process, and the audio is sent again the way every server accepts.
+	if words && refusesTheRequest(res.StatusCode) {
 		res.Body.Close()
 		p.wordsRefused.Store(true)
 		if res, err = p.post(ctx, fileName, audio, req.Language, false); err != nil {
@@ -122,6 +122,16 @@ func (p *OpenAIProvider) Transcribe(ctx context.Context, req TranscribeRequest) 
 		out.Segments[at].Words = append(out.Segments[at].Words, ProviderWord{Text: text, Start: w.Start, End: w.End})
 	}
 	return out, nil
+}
+
+// refusesTheRequest tells a server objecting to what was asked from one
+// objecting to who asks or how often: only the first is worth a second try.
+func refusesTheRequest(status int) bool {
+	switch status {
+	case http.StatusUnauthorized, http.StatusForbidden, http.StatusTooManyRequests:
+		return false
+	}
+	return status >= 400 && status < 500
 }
 
 func (p *OpenAIProvider) post(ctx context.Context, fileName string, audio []byte, language string, words bool) (*http.Response, error) {
