@@ -31,6 +31,25 @@ type Segment struct {
 	StartSeconds float64 `json:"start_seconds"`
 	EndSeconds   float64 `json:"end_seconds"`
 	Text         string  `json:"text"`
+	// Words are the segment's words with their own timings, when the
+	// provider reports them. They are read from the transcription, never
+	// carried by its events: a long recording's words outgrow a message.
+	Words []Word `json:"words,omitempty"`
+}
+
+type Word struct {
+	StartSeconds float64 `json:"start_seconds"`
+	EndSeconds   float64 `json:"end_seconds"`
+	Text         string  `json:"text"`
+}
+
+func withoutWords(segments []Segment) []Segment {
+	out := make([]Segment, len(segments))
+	for i, s := range segments {
+		s.Words = nil
+		out[i] = s
+	}
+	return out
 }
 
 type Result struct {

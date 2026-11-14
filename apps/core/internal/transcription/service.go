@@ -202,7 +202,7 @@ func (s *Service) process(ctx context.Context, id string) {
 		Language:        result.Language,
 		DurationSeconds: result.DurationSeconds,
 		Text:            result.Text,
-		Segments:        result.Segments,
+		Segments:        withoutWords(result.Segments),
 	})
 }
 
@@ -291,7 +291,11 @@ func toResult(r *transcribe.Result, hint string) Result {
 		if text == "" {
 			continue
 		}
-		out.Segments = append(out.Segments, Segment{StartSeconds: seg.Start, EndSeconds: seg.End, Text: text})
+		kept := Segment{StartSeconds: seg.Start, EndSeconds: seg.End, Text: text}
+		for _, w := range seg.Words {
+			kept.Words = append(kept.Words, Word{StartSeconds: w.Start, EndSeconds: w.End, Text: w.Text})
+		}
+		out.Segments = append(out.Segments, kept)
 		texts = append(texts, text)
 	}
 	out.Text = strings.Join(texts, " ")

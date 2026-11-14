@@ -227,6 +227,23 @@ definitions:
         type: number
       text:
         type: string
+      words:
+        description: |-
+          Words are the segment's words with their own timings, when the
+          provider reports them. They are read from the transcription, never
+          carried by its events: a long recording's words outgrow a message.
+        items:
+          $ref: '#/definitions/transcription.Word'
+        type: array
+    type: object
+  transcription.Word:
+    properties:
+      end_seconds:
+        type: number
+      start_seconds:
+        type: number
+      text:
+        type: string
     type: object
 info:
   contact: {}

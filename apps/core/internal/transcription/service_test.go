@@ -37,7 +37,10 @@ func (e stubEngine) Transcribe(ctx context.Context, src transcribe.Source, opts 
 		Language:        "fr",
 		Segments: []transcribe.Segment{
 			{Text: " bonjour ", Start: 0, End: 1.5, HasTiming: true},
-			{Text: "le monde", Start: 1.5, End: 3, HasTiming: true},
+			{Text: "le monde", Start: 1.5, End: 3, HasTiming: true, Words: []transcribe.Word{
+				{Text: "le", Start: 1.6, End: 1.8},
+				{Text: "monde", Start: 1.8, End: 2.7},
+			}},
 		},
 	}, nil
 }
@@ -135,6 +138,9 @@ func TestCompletedJobIsStoredMeteredAndAnnounced(t *testing.T) {
 	if len(segs) != 2 || segs[1].(map[string]any)["start_seconds"] != 1.5 {
 		t.Fatalf("segments = %v", segs)
 	}
+	if _, carried := segs[1].(map[string]any)["words"]; carried {
+		t.Fatalf("the event must not carry words: %v", segs[1])
+	}
 	line := await(t, rec.lines)
 	if line.Quantity != 62 || line.ExternalUserID != "app-1" || line.EndUserID != "u42" || line.IdempotencyKey != j.ID+".seconds" {
 		t.Fatalf("cost = %+v", line)
@@ -142,6 +148,10 @@ func TestCompletedJobIsStoredMeteredAndAnnounced(t *testing.T) {
 	stored, _ := s.Get(ctx, j.ID)
 	if stored.Status != StatusCompleted || stored.Result.Text != "bonjour le monde" {
 		t.Fatalf("stored = %+v", stored)
+	}
+	words := stored.Result.Segments[1].Words
+	if len(words) != 2 || words[1] != (Word{StartSeconds: 1.8, EndSeconds: 2.7, Text: "monde"}) || stored.Result.Segments[0].Words != nil {
+		t.Fatalf("stored words = %+v", stored.Result.Segments)
 	}
 }
 

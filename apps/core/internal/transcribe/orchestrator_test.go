@@ -184,3 +184,17 @@ func TestJoinText(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestWordsMoveWithTheirChunk(t *testing.T) {
+	res := &TranscribeResult{Segments: []ProviderSegment{{
+		Text: "le monde", Start: 1.5, End: 3,
+		Words: []ProviderWord{{Text: "le", Start: 1.6, End: 1.8}, {Text: "monde", Start: 1.8, End: 2.7}},
+	}}}
+	got := segmentsForChunk(res, 300, 600)
+	if len(got) != 1 || got[0].Start != 301.5 || len(got[0].Words) != 2 {
+		t.Fatalf("segments = %+v", got)
+	}
+	if w := got[0].Words[1]; w.Text != "monde" || w.Start != 301.8 || w.End != 302.7 {
+		t.Fatalf("word = %+v, want it offset by the chunk start like its segment", w)
+	}
+}

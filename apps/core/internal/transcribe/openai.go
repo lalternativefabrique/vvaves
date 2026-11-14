@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -25,8 +26,9 @@ type OpenAIConfig struct {
 
 // OpenAIProvider asks an OpenAI-compatible endpoint for timed segments.
 type OpenAIProvider struct {
-	cfg  OpenAIConfig
-	http *http.Client
+	cfg          OpenAIConfig
+	http         *http.Client
+	wordsRefused atomic.Bool
 }
 
 func NewOpenAIProvider(cfg OpenAIConfig) *OpenAIProvider {
@@ -51,24 +53,99 @@ func (p *OpenAIProvider) Transcribe(ctx context.Context, req TranscribeRequest) 
 		fileName = "audio.m4a"
 	}
 
+	audio, err := io.ReadAll(req.File)
+	if err != nil {
+		return nil, fmt.Errorf("openai provider: read audio: %w", err)
+	}
+
+	words := !p.wordsRefused.Load()
+	res, err := p.post(ctx, fileName, audio, req.Language, words)
+	if err != nil {
+		return nil, err
+	}
+	// Word timings are an extension some compatible servers reject outright:
+	// one refusal settles it for this process, and the audio is sent again
+	// the way every server accepts.
+	if words && res.StatusCode == http.StatusBadRequest {
+		res.Body.Close()
+		p.wordsRefused.Store(true)
+		if res, err = p.post(ctx, fileName, audio, req.Language, false); err != nil {
+			return nil, err
+		}
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusTooManyRequests {
+		return nil, &RateLimitError{RetryAfter: ParseRetryAfter(res.Header.Get("Retry-After"), time.Now()), StatusCode: res.StatusCode}
+	}
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		detail, _ := io.ReadAll(io.LimitReader(res.Body, 512))
+		return nil, fmt.Errorf("openai provider: status %d: %s", res.StatusCode, bytes.TrimSpace(detail))
+	}
+
+	var payload struct {
+		Text     string `json:"text"`
+		Language string `json:"language"`
+		Segments []struct {
+			Start float64 `json:"start"`
+			End   float64 `json:"end"`
+			Text  string  `json:"text"`
+		} `json:"segments"`
+		Words []struct {
+			Word  string  `json:"word"`
+			Start float64 `json:"start"`
+			End   float64 `json:"end"`
+		} `json:"words"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		return nil, fmt.Errorf("openai provider: decode: %w", err)
+	}
+	out := &TranscribeResult{
+		Text:     strings.TrimSpace(payload.Text),
+		Language: normalizeLanguage(payload.Language),
+	}
+	for _, s := range payload.Segments {
+		out.Segments = append(out.Segments, ProviderSegment{Text: strings.TrimSpace(s.Text), Start: s.Start, End: s.End})
+	}
+	// verbose_json lists words beside the segments, not inside them: each
+	// goes to the segment it starts in, the last segment taking any that
+	// start after its end.
+	at := 0
+	for _, w := range payload.Words {
+		text := strings.TrimSpace(w.Word)
+		if text == "" || len(out.Segments) == 0 {
+			continue
+		}
+		for at < len(out.Segments)-1 && w.Start >= out.Segments[at].End {
+			at++
+		}
+		out.Segments[at].Words = append(out.Segments[at].Words, ProviderWord{Text: text, Start: w.Start, End: w.End})
+	}
+	return out, nil
+}
+
+func (p *OpenAIProvider) post(ctx context.Context, fileName string, audio []byte, language string, words bool) (*http.Response, error) {
 	var body bytes.Buffer
 	form := multipart.NewWriter(&body)
 	part, err := form.CreateFormFile("file", fileName)
 	if err != nil {
 		return nil, fmt.Errorf("openai provider: multipart file: %w", err)
 	}
-	if _, err := io.Copy(part, req.File); err != nil {
+	if _, err := part.Write(audio); err != nil {
 		return nil, fmt.Errorf("openai provider: copy audio: %w", err)
 	}
 	fields := [][2]string{
 		{"response_format", "verbose_json"},
 		{"timestamp_granularities[]", "segment"},
 	}
+	if words {
+		fields = append(fields, [2]string{"timestamp_granularities[]", "word"})
+	}
 	if p.cfg.Model != "" {
 		fields = append(fields, [2]string{"model", p.cfg.Model})
 	}
-	if req.Language != "" {
-		fields = append(fields, [2]string{"language", req.Language})
+	if language != "" {
+		fields = append(fields, [2]string{"language", language})
 	}
 	for _, f := range fields {
 		if err := form.WriteField(f[0], f[1]); err != nil {
@@ -91,36 +168,7 @@ func (p *OpenAIProvider) Transcribe(ctx context.Context, req TranscribeRequest) 
 	if err != nil {
 		return nil, fmt.Errorf("openai provider: call: %w", err)
 	}
-	defer res.Body.Close()
-
-	if res.StatusCode == http.StatusTooManyRequests {
-		return nil, &RateLimitError{RetryAfter: ParseRetryAfter(res.Header.Get("Retry-After"), time.Now()), StatusCode: res.StatusCode}
-	}
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		detail, _ := io.ReadAll(io.LimitReader(res.Body, 512))
-		return nil, fmt.Errorf("openai provider: status %d: %s", res.StatusCode, bytes.TrimSpace(detail))
-	}
-
-	var payload struct {
-		Text     string `json:"text"`
-		Language string `json:"language"`
-		Segments []struct {
-			Start float64 `json:"start"`
-			End   float64 `json:"end"`
-			Text  string  `json:"text"`
-		} `json:"segments"`
-	}
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return nil, fmt.Errorf("openai provider: decode: %w", err)
-	}
-	out := &TranscribeResult{
-		Text:     strings.TrimSpace(payload.Text),
-		Language: normalizeLanguage(payload.Language),
-	}
-	for _, s := range payload.Segments {
-		out.Segments = append(out.Segments, ProviderSegment{Text: strings.TrimSpace(s.Text), Start: s.Start, End: s.End})
-	}
-	return out, nil
+	return res, nil
 }
 
 // verbose_json reports the language by name ("french") on OpenAI and by ISO

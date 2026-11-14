@@ -33,6 +33,16 @@ type Segment struct {
 	Start        float64
 	End          float64
 	HasTiming    bool
+	// Words are the segment's words in absolute time, when the provider
+	// timed them.
+	Words []Word
+}
+
+// Word is one word of a segment, in seconds from the start of the audio.
+type Word struct {
+	Text  string
+	Start float64
+	End   float64
 }
 
 // Result is the value returned by Transcribe. It is a plain Go value: the lib
@@ -303,6 +313,9 @@ func segmentsForChunk(res *TranscribeResult, chunkStartSeconds int, chunkEndSeco
 			Start:        off + s.Start,
 			End:          off + s.End,
 			HasTiming:    true,
+		}
+		for _, w := range s.Words {
+			out[i].Words = append(out[i].Words, Word{Text: w.Text, Start: off + w.Start, End: off + w.End})
 		}
 	}
 	return out

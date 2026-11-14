@@ -42,6 +42,16 @@ type ProviderSegment struct {
 	Text  string
 	Start float64
 	End   float64
+	// Words are the segment's words with their own timings, when the backend
+	// reports them; nil otherwise.
+	Words []ProviderWord
+}
+
+// ProviderWord is one word, timed like the segment it belongs to.
+type ProviderWord struct {
+	Text  string
+	Start float64
+	End   float64
 }
 
 // TranscribeResult holds the output a provider returns for one payload. Text is
