@@ -62,7 +62,7 @@ func TestOpenAIProviderGivesUpOnWordsWhenTheServerRefusesThem(t *testing.T) {
 		granularities := r.MultipartForm.Value["timestamp_granularities[]"]
 		asked = append(asked, granularities)
 		if len(granularities) > 1 {
-			http.Error(w, `{"error":"unsupported granularity"}`, http.StatusBadRequest)
+			http.Error(w, `{"error":"unsupported granularity"}`, http.StatusUnprocessableEntity)
 			return
 		}
 		w.Write([]byte(`{"text":"bonjour","segments":[{"start":0,"end":1,"text":"bonjour"}]}`))
@@ -95,5 +95,23 @@ func TestOpenAIProviderRateLimit(t *testing.T) {
 	var rle *RateLimitError
 	if !errors.As(err, &rle) || rle.RetryAfter.Seconds() != 7 {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestOpenAIProviderDoesNotRetryAnAuthOrQuotaRefusal(t *testing.T) {
+	for _, status := range []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusTooManyRequests} {
+		calls := 0
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			calls++
+			w.WriteHeader(status)
+		}))
+		p := NewOpenAIProvider(OpenAIConfig{URL: srv.URL})
+		if _, err := p.Transcribe(context.Background(), TranscribeRequest{File: strings.NewReader("x")}); err == nil {
+			t.Errorf("status %d: no error", status)
+		}
+		srv.Close()
+		if calls != 1 || p.wordsRefused.Load() {
+			t.Errorf("status %d: %d calls, words given up: %v — a credential or quota problem is not about words", status, calls, p.wordsRefused.Load())
+		}
 	}
 }
