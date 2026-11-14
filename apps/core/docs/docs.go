@@ -1089,6 +1089,27 @@ const docTemplate = `{
                 },
                 "text": {
                     "type": "string"
+                },
+                "words": {
+                    "description": "Words are the segment's words with their own timings, when the\nprovider reports them. They are read from the transcription, never\ncarried by its events: a long recording's words outgrow a message.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transcription.Word"
+                    }
+                }
+            }
+        },
+        "transcription.Word": {
+            "type": "object",
+            "properties": {
+                "end_seconds": {
+                    "type": "number"
+                },
+                "start_seconds": {
+                    "type": "number"
+                },
+                "text": {
+                    "type": "string"
                 }
             }
         }
